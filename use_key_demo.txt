@@ -1,0 +1,29 @@
+@name Use Key Demo
+@inputs Screen:wirelink
+@persist Owner:entity
+
+if( first() ) {
+    dsSend( "Bind.Use", "DSS.Events", 2, 0 )
+    Onwer = owner()
+}
+
+if( dsClk( "Use.Triggered" ) ) {
+    Screen[2041] = 1
+    
+    T = dsGetTable()
+    E = T["aim_entity", entity]
+    
+    if( E:isPlayer() ) {
+        if( E:isSuperAdmin() ) { Color = 90 }
+        elseif( E:isAdmin() ) { Color = 9 }
+        else { Color = 900 }
+        
+        Screen:writeString( E:name(), 0, 0, Color )
+        Screen:writeString( E:steamID(), 0, 1, 99 )
+        
+        Text = "This person is " + ( Owner:isSteamFriend(E) ? "" : "not" ) + " a friend."
+        Screen:writeString( Text, 0, 2, 99 )
+    } else {
+        Screen:writeString( E:type(), 0, 0, 99 )
+    }
+}

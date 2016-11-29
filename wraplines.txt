@@ -1,0 +1,28 @@
+@name WrapLines
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+function array wrapLines(Str:string, Width:number) {
+    Words=Str:explode(" ")
+    Ret=array()
+    Line=""
+    for(I=1,Words:count()) {
+        Word=Words[I, string]
+        if(Line:length()+Word:length()>Width) {
+            Ret:pushString(Line)
+            Line=""
+            while(Word:length()>Width) {
+                Ret:pushString(Word:left(Width))
+                Word=Word:sub(Width+1)
+            }
+        }
+        Line+=Word
+        if(Line:length()<Width) {
+            Word+=" "
+        }
+    }
+    return Ret
+}
+

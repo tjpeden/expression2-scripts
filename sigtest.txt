@@ -1,0 +1,16 @@
+@name Signal Test
+@inputs Clk
+@outputs 
+@persist 
+@trigger all
+
+signalSetGroup( "test" )
+
+if( first() ) {
+    print( "Group: " + signalGetGroup() )
+}
+
+if( ~Clk & Clk ) {
+    signalSend( "testing", 0 )
+    print( "Signal sent." )
+}

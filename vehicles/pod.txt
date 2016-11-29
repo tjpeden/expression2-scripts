@@ -1,0 +1,38 @@
+@name Pod
+@persist Vehicle:entity Owner:entity Driver:entity Orientation:angle Lock
+@outputs Lock
+
+if( first() ) {
+    runOnTick(1)
+    E = entity()
+    Vehicle = E:isWeldedTo()
+    Owner = Vehicle:owner()
+    Orientation = Owner:angles()
+}
+
+LockLast = Lock
+Driver = Vehicle:driver()
+
+Distance = Owner:pos():distance( Vehicle:pos() )
+Lock = Distance <= 100 ? 0 : 1
+
+if( Lock != LockLast ) { Vehicle:lockPod( Lock ) }
+
+if( LockLast & !Lock ) {
+    Vehicle:soundPlay( "alarm", 0, "common/bugreporter_succeeded.wav" )
+} elseif( !LockLast & Lock ) {
+    Vehicle:soundPlay( "alarm", 0, "common/warning.wav" )
+}
+
+if( Driver ) {
+    TargetQ  = quat( Orientation )
+    CurrentQ = quat( Vehicle )
+    
+    CorrectionQ = TargetQ / CurrentQ
+    
+    Torque = Vehicle:toLocal( rotationVector( CorrectionQ ) + Vehicle:pos() )
+    
+    Vehicle:applyTorque( ( Torque * 150 - Vehicle:angVelVector() * 12 ) * Vehicle:inertia() )
+}
+
+if( !Owner ) { selfDestructAll() }

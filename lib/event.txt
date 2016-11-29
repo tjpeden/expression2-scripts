@@ -1,0 +1,60 @@
+@name libEvent
+@persist PCV
+
+#include "lib/table"
+
+function table newEvents(Data:table) {
+    local T = table()
+    
+    T["Data", table] = Data
+    
+    return T
+}
+
+function table:on(Key:string, Name:string, Action:string) {
+    local E = table()
+    
+    E["Key", string] = Key
+    E["Name", string] = Name
+    E["Action", string] = Action
+    
+    This:pushTable(E)
+}
+
+function table:on(Key:string, Name:string, Action:string, Args:table) {
+    local E = table()
+    
+    E["Key", string] = Key
+    E["Name", string] = Name
+    E["Action", string] = Action
+    E["Args", table] = Args
+    
+    This:pushTable(E)
+}
+
+function table:callAction() {
+    local Action = This["Action", string]
+    
+    if( This:exists("Args") ) {
+        local Args = This["Args", table]:clone()
+        Action(Args)
+    } else { Action() }
+}
+
+function table:eventsThink() {
+    local Data = This["Data", table]
+    PCV = 1
+    while( PCV <= This:count() ) {
+        local E = This[PCV, table]
+        local Key = E["Key", string]
+        local Name = E["Name", string]
+        
+        if( Name == "rise" & Data:hasRisen(Key) ) { E:callAction() }
+        elseif( Name == "fall" & Data:hasFallen(Key) ) { E:callAction() }
+        elseif( Name == "change" & Data:hasChanged(Key) ) { E:callAction() }
+        elseif( Name == "high" & Data:current(Key) ) { E:callAction() }
+        elseif( Name == "low" & !Data:current(Key) ) { E:callAction() }
+        
+        PCV++
+    }
+}

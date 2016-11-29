@@ -1,0 +1,4 @@
+@name Beacon
+@outputs Position:vector
+
+Position = entity():pos()

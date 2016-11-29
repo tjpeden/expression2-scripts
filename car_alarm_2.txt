@@ -1,0 +1,12 @@
+@name Car Alarm 2
+
+runOnTick(1)
+
+Owner = owner()
+Vehicle = entity():isWeldedTo()
+Driver = Vehicle:driver()
+
+if( Driver & ( Driver != Owner | !Owner:trusts( Driver ) ) ) {
+    Vehicle:killPod()
+    Vehicle:soundPlay( "theft", 1.158, "npc/combine_soldier/vo/confirmsectornotsterile.wav" )
+}

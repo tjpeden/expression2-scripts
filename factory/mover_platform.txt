@@ -1,0 +1,39 @@
+@name Mover Platform
+@inputs Hydro:wirelink Reset
+@persist Group:string
+@persist Length Position Start InPosition
+
+runOnTick(1)
+
+if( first() ) {
+    Group = "Factory"
+    dsJoinGroup( Group )
+    dsSetScope( 0 )
+    Start = 0
+    Position = Start
+    Length = Start
+    Hydro["Length", number] = Length
+}
+
+if( Reset & ~Reset ) {
+    Position = Start
+    Hydro:entity():soundPlay( "moving", 0, "ambient/machines/electrical_hum_2.wav" )
+}
+
+if( dsClk("move") ) {
+    Position = Length + 150
+    Hydro:entity():soundPlay( "moving", 0, "ambient/machines/electrical_hum_2.wav" )
+}
+
+LastInPosition = InPosition
+InPosition = Length == Position
+if( !InPosition ) {
+    Diff = Position - Length
+    Move = Diff / abs( Diff )
+    Length += Move
+    Hydro["Length", number] = Length
+} else {
+    soundStop( "moving" )
+}
+
+if( !LastInPosition & InPosition & Length > Start ) { dsSend( "create", Group, 1 ) }

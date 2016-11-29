@@ -1,0 +1,97 @@
+@name Tesla Coil
+@inputs 
+@outputs 
+@persist Base:entity Env:table Sound Index
+
+interval(250)
+
+if( first() | duped() ) {
+    #include "lib/command"
+    
+    Index = 0
+    
+    function number nextIndex() {
+        local Next = Index
+        Index += 1
+        return Next
+    }
+    
+    function number newHolo(Type:string, Parent:entity) {
+        local N = nextIndex()
+        holoCreate(N)
+        holoModel(N, Type)
+        holoParent(N, Parent)
+        return N
+    }
+    
+    function number newHolo(Type:string, Parent) {
+        local N = nextIndex()
+        holoCreate(N)
+        holoModel(N, Type)
+        holoParent(N, Parent)
+        return N
+    }   
+    
+    function teslaSound(Args:table, Ret:table) {
+        Sound = Args:popNumber()
+    }
+    
+    Base = entity()
+    
+    Env = newEnv(":")
+    Env:pushTable(newCommand("tsound", "teslaSound", "n"))
+    
+    runOnChat(1)
+}
+
+if( changed(Base) & Base ) {
+    local Scalar = 10
+    local Pos = Base:pos()
+    
+    local N = newHolo("hq_tube_thin", Base)
+    local Parent = N
+    local ParentScale = vec(1.5, 1.5, 7.5) * Scalar
+    local PVCTop = ParentScale:z()
+    holoScaleUnits(N, ParentScale)
+    holoColor(N, vec(184, 115, 51))
+    holoPos(N, Pos + vec(0, 0, PVCTop / 2))
+    
+    N = newHolo("hq_rcylinder", Parent)
+    holoScaleUnits(N, vec(5, 5, 0.1) * Scalar)
+    holoMaterial(N, "phoenix_storms/iron_rails")
+    holoPos(N, Pos + vec(0, 0, PVCTop))
+    
+    N = newHolo("hq_torus_thick", Parent)
+    holoScaleUnits(N, vec(6, 6, 6) * Scalar)
+    holoMaterial(N, "phoenix_storms/iron_rails")
+    holoPos(N, Pos + vec(0, 0, PVCTop))
+    
+    N = newHolo("hq_torus_thin", Parent)
+    holoScaleUnits(N, vec(3, 3, 3) * Scalar)
+    holoColor(N, vec(184, 115, 51))
+    holoPos(N, Pos + vec(0, 0, 5))
+    
+    N = newHolo("hq_torus_thin", Parent)
+    holoScaleUnits(N, vec(4, 4, 4) * Scalar)
+    holoColor(N, vec(184, 115, 51))
+    holoPos(N, Pos + vec(0, 0, 10))
+    
+    N = newHolo("hq_torus_thin", Parent)
+    holoScaleUnits(N, vec(5, 5, 5) * Scalar)
+    holoColor(N, vec(184, 115, 51))
+    holoPos(N, Pos + vec(0, 0, 15))
+}
+
+if( changed(Sound) ) {
+    if( Sound ) {
+        Base:soundPlay(0, 0, "ambient/energy/electric_loop.wav")
+    } else {
+        soundStop(0)
+    }
+}
+
+if( chatClk(owner()) ) {
+    if(Env:envExec(lastSaid()) ) {
+        hideChat(1)
+    }
+}

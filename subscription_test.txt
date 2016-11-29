@@ -1,0 +1,15 @@
+@name Subscription Test
+@persist 
+
+if( first() ) {
+    dsSend( "BindUse", "Events", 2, 0 )
+}
+
+if( dsClk("UseTriggered") ) {
+    T = dsGetTable()
+    E = T["aim_entity", entity]
+    
+    if( E:isPlayer() ) {
+        print( E:name() )
+    }
+}

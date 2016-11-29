@@ -1,0 +1,18 @@
+@name Going Up
+@inputs Ignore:wirelink
+@outputs Force:vector
+@persist 
+@trigger 
+
+runOnTick(1)
+
+rangerFilter( Ignore["Entity", entity] )
+
+Data = ranger(100)
+
+if( Data:hit() ) {
+    # owner():soundPlay(1, 0.28, "ambient/animal/cricket_chirp_1.wav")
+    Victim = Data:entity()
+    Force = Victim:up() * 10000
+    Victim:applyForce( Force )
+}

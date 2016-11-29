@@ -1,0 +1,29 @@
+@name All Da E2s
+@inputs 
+@outputs 
+@persist Count:normal
+@trigger 
+interval(1000)
+findByClass(entity():type())
+if(findCanQuery())
+{
+    print("Before: " + Count)
+    local LC = Count
+    local Find = findToArray()
+    Count = Find:count()
+    print("After: " + Count)
+    if(Count>LC)
+    {
+        local Change = Count-LC
+        print(Change, Count, LC)
+        print(_HUD_PRINTCONSOLE,"Var changed by "+Change)
+        for(I=1,Change)
+        {
+            local Cur = LC+I
+            print(_HUD_PRINTCONSOLE,"Loop #"+Cur)
+            Ent = Find[Cur,entity]
+            print(_HUD_PRINTCONSOLE,Ent:owner():name()+" placed '"+Ent:getName()+"'.")
+        }
+    }
+}
+

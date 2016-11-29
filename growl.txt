@@ -1,0 +1,5 @@
+@name Growl
+@inputs In E:entity
+@trigger In
+
+if(In) { dsSend("Gate.Access", "Growl.Notify", E:name()) }

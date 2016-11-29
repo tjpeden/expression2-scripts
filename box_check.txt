@@ -1,0 +1,47 @@
+@name Box Check
+@inputs 
+@outputs Door Force Velocity
+@persist Self:entity Min:vector Max:vector
+@model models/Holograms/hqsphere2.mdl
+
+if( first() | duped() ) {
+    dsJoinGroup( "DM Battle" )
+    
+    Door = 1
+    Target = entity():isWeldedTo()
+    Min = Target:toWorld( Target:boxMin() )
+    Max = Target:toWorld( Target:boxMax() )
+    
+    Self = entity()
+    Self:setColor( vec( 0, 0, 255 ) )
+}
+
+if( dsClk( "Reset" ) ) {
+    Self:setColor( vec( 0, 0, 255 ) )
+    Force = 0
+    Velocity = 0
+}
+
+if( dsClk( "Activate" ) ) {
+    Self:setColor( vec( 0, 255, 0 ) )
+    Door = 1
+    Force = 1
+    Velocity = 500
+    exit()
+}
+
+if( clk( "Door" ) ) {
+    Self:setColor( vec( 255, 127, 0 ) )
+    Door = 0
+    
+    dsSend( "Ready", "DM Battle", 0 )
+    exit()
+}
+
+findInBox( Min, Max )
+Num = findClipToClass( "player" )
+
+if( Num ) {
+    Self:setColor( vec( 255, 0, 0 ) )
+    timer( "Door", 2000 )
+} else { interval( 200 ) }

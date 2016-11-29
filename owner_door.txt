@@ -1,0 +1,33 @@
+@name Owner Door
+@inputs Hydro:wirelink Lock:wirelink
+@persist Owner:entity Self:entity
+@persist Length Threshold Open
+
+if( first() ) {
+    runOnTick(1)
+    Self = entity()
+    Owner = owner()
+    Length = -1
+    
+    # Constants
+    Threshold = 50
+    Open = 65
+    
+    #Close Door
+    Hydro["Length", number] = 0
+}
+
+Distance = Owner:pos():distance( Self:pos() )
+if( Distance <= Threshold & Length != Open ) {
+    Length = Open
+    Lock["Activate", number] = 0
+    timer( "Move", 25 )
+} elseif( Distance > Threshold & Length != 0 ) {
+    Length = 0
+    timer( "Move", 1000 )
+    timer( "Lock", 2000 )
+}
+
+if( clk( "Move" ) ) { Hydro["Length", number] = Length }
+
+if( clk( "Lock" ) ) { Lock["Activate", number] = 1 }

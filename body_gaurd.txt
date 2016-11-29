@@ -1,0 +1,72 @@
+@name Body Gaurd
+@outputs Doing:string Distance
+@persist Trigger Alive
+@persist Gaurd:entity Doing:string
+runOnTick(1)
+
+Follow = 300
+Controller = "weapon_crowbar"
+
+Owner = owner()
+OPos = Owner:pos()
+GPos = Gaurd:pos()
+Weapon = Owner:weapon():type()
+TriggerLast = Trigger
+Trigger = Owner:keyAttack1()
+
+if( Trigger & !TriggerLast & Weapon == Controller ) {
+    E = Owner:aimEntity()
+    if( !Gaurd ) {
+        if( E & E:isNPC() ) {
+            Gaurd = E
+            Gaurd:npcRelationship( Owner, "like", 999 )
+            Gaurd:npcGiveWeapon("pistol")
+            Gaurd:soundPlay( 1, 0, "bot/aw_hell.wav" )
+        }
+    } else {
+        if( E & E:isAlive() ) {
+            Gaurd:npcRelationship( E, "hate", 990 )
+            Gaurd:npcSetTarget( E )
+            Gaurd:soundPlay( 1, 0, "bot/attacking.wav" )
+        }
+    }
+}
+
+Target = Gaurd:npcGetTarget()
+TPos = Target:pos()
+AliveLast = Alive
+Alive = Target:isAlive()
+if( Target & Alive & Doing != "attacking" ) {
+    Gaurd:npcFace( Target:pos() )
+    
+    if( GPos:distance( TPos ) > 200 & Doing != "hunting" ) {
+        Gaurd:npcGoRun( TPos )
+        Doing = "hunting"
+    } else {
+        Gaurd:npcStop()
+        Gaurd:npcAttack()
+        Doing = "attacking"
+    }
+} elseif( !Alive & AliveLast ) {
+    Doing = "waiting"
+}
+
+if( !Target | !Alive ) {
+    Distance = GPos:distance( OPos )
+    if( Distance > Follow & Doing != "following" ) {
+        Gaurd:npcGoRun( OPos )
+        Doing = "following"
+        timer( Doing, 2000 )
+    } elseif( Distance <= Follow & Doing != "waiting" ) {
+        Gaurd:npcStop()
+        Doing = "waiting"
+    }
+}
+
+if( clk( "following" ) & Doing == "following" ) {
+    Distance = GPos:distance( OPos )
+    if( Distance > Follow ) {
+        Gaurd:npcGoRun( OPos )
+        timer( Doing, 2000 )
+    }
+}

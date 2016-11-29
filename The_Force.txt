@@ -1,0 +1,26 @@
+@name The Force
+@inputs 
+@outputs 
+@persist Owner:entity
+@trigger 
+
+if( first() ) {
+    Owner = owner()
+    
+    function void entity:forceToward(From:vector, Strength) {
+        This:applyForce(Strength * (This:pos() - From))
+    }
+    
+    dsSend( "Bind.Attack2", "DSS.Events", 1 )
+}
+
+if( dsClk( "Attack2.Triggered" ) ) {
+    T = dsGetTable()
+    
+    Target = T["aim_entity", entity]
+    Weapon = T["weapon_type", string]
+    
+    if( Target & Weapon == "weapon_crowbar" ) {
+        Target:forceToward(Target:up(), 10000)
+    }
+}

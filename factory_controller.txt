@@ -1,0 +1,32 @@
+@name Factory Controller 
+@inputs Start
+@persist P:gtable
+
+E = entity()
+Group = "Factory"
+
+if( first() ) {
+    dsJoinGroup( Group )
+    dsSetScope( 0 )
+    
+    # Hydro Positions
+    P = gTable( Group )
+    P["start", number] = 470
+    P["dock", number] = 1200
+}
+
+if( Start & ~Start) {
+    E:soundPlay( 0, 0, "ambient/machines/steam_release_2.wav" )
+    dsSend( "create", Group, "base" )
+}
+
+#if( dsClk( Step ) ) {
+#    Step = ( Step == "base" ? "dock" : Step )
+#    
+#    # Reset
+#    Step = ( Step == LastStep ? "start" : Step )
+#}
+#
+#Pos = P[Step, number]
+#if( Pos ) { dsSend( Step, Group, Pos ) }
+#elseif( Step != LastStep ) { dsSend( "create", Group, Step ) }

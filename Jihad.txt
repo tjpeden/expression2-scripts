@@ -1,0 +1,18 @@
+@name Jihad
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+if( first() ) {
+    timer("jihad", 10)
+}
+
+if( clk("jihad") ) {
+    entity():soundPlay(1, 2600, "siege/jihad.wav")
+    timer("boom", 2500)
+}
+
+if( clk("boom") ) {
+    entity():soundPlay(2, 0, "siege/big_explosion.wav")
+}

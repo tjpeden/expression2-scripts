@@ -1,0 +1,15 @@
+@name Forcer Controller
+@inputs Clk
+@outputs Force ForceOffset Velocity
+@persist 
+@trigger all
+
+if( ~Clk & Clk ) {
+    Force = 1000000000
+    ForceOffset = 0
+    Velocity = 1000000000
+} else {
+    Force = 0
+    ForceOffset = 0
+    Velocity = 0
+}

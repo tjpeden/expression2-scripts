@@ -1,0 +1,31 @@
+@name HintPopup Test
+@inputs EntMarkChair:entity ActivePodController
+@outputs 
+@persist Times
+
+interval(1000)
+
+if (first())
+{
+	hint("Hi! Wire EntMarkChair to an Entity Marker plugged on a chair.",5.5)
+	hint("Then plug a Adv.Pod.Controller on a chair, and wire the ActivePodController",6)
+	hint("to the Active output of the Adv.Pod.Controller.",6.5)
+}
+
+Times = Times + 1
+
+if (~ActivePodController & ActivePodController)
+{
+	hint("Someone entered the chair!",3)
+	Times = 0
+}
+
+if (~ActivePodController & !ActivePodController)
+{
+	hint("Someone left the chair!",3)
+}
+
+if (ActivePodController)
+{
+	EntMarkChair:hintDriver("You're in a " + EntMarkChair:type() + " for " + Times + " seconds",3)
+}

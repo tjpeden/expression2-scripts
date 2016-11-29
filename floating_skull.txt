@@ -1,0 +1,11 @@
+@name Floating Skull
+@inputs 
+@outputs 
+@persist Self:entity
+@model models/Gibs/HGIBS.mdl
+
+if( first() ) {
+    Self = entity()
+}
+
+

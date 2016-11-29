@@ -1,0 +1,7 @@
+@name Cascader
+@inputs A B C D
+@outputs Out
+@persist Out
+@trigger all
+
+Out = !Out

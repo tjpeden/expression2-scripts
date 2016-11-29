@@ -1,0 +1,30 @@
+@name Mover Platform
+@inputs Hydro:wirelink
+@persist P:gtable
+
+runOnTick(1)
+
+Group = "Factory"
+Step = "move"
+
+if( first() ) {
+    dsJoinGroup( Group )
+    dsSetScope( 0 )
+    P = gTable( Group )
+}
+
+if( dsClk() ) {
+    Signal = dsClkName()
+    Pos = P[Signal, number]
+#    if( Pos ) {
+#        Hydro["Length", number] = Pos
+#        #dsSend( "", Group, 1 )
+#    }
+}
+
+Length = Hydro["Length", number]
+if( Length != Pos ) {
+    Diff = Pos - Length
+    Move = Diff / abs( Diff )
+    Hydro["Length", number] = Length + Move
+}

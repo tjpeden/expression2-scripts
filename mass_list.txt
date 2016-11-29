@@ -1,0 +1,12 @@
+@name Mass List
+
+if( first() ) {
+    dsSend( "Bind.Use", "DSS.Events", 1 )
+}
+
+if( dsClk( "Use.Triggered" ) ) {
+    T = dsGetTable()
+    E = T["aim_entity", entity]
+    
+    if(E) { print( "Mass: " + E:mass() ) }
+}

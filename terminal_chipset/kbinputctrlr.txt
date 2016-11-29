@@ -1,0 +1,47 @@
+@name Keyboard Input Controller
+@inputs Keyboard:wirelink
+@inputs Memory
+@outputs Text:string Typing:string
+@persist Name:string
+#@trigger all
+
+User = Keyboard:entity( "User" )
+InUse = Keyboard:number( "InUse" )
+
+Max = 27
+
+if( ~InUse & InUse ) {
+    Name = User:name()
+    print( Name + " is making a long distance call..." )
+}
+
+if( ~InUse & !InUse ) {
+    Name = ""
+    Typing = ""
+}
+
+if( InUse & ~Memory ) {
+    if( Typing:length() == Max | ( Memory == 13 & Typing:length() > 0 ) ) {
+        Text = Typing
+        Typing = ""
+    }
+    
+    if( Typing:length() > 0 & Memory == 127 ) {
+        Typing = Typing:left( Typing:length() - 1 )
+    }
+    
+    if( Memory >= 128 & Memory <= 137 ) {
+        Memory -= 80
+    }
+    
+    if( Memory == 138 ) { Memory = 47 }
+    if( Memory == 139 ) { Memory = 42 }
+    if( Memory == 140 ) { Memory = 45 }
+    if( Memory == 141 ) { Memory = 43 }
+    if( Memory == 143 ) { Memory = 46 }
+    
+    if( Memory >= 32 & Memory < 127 ) {
+        Typing += toChar( Memory )
+        Typing = Typing:trimLeft()
+    }
+}

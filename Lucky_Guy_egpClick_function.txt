@@ -1,0 +1,22 @@
+@name Lucky Guy egpClick function
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+if(first()){
+    function number wirelink:egpClick(Player:entity,ID){
+        local Pos=This:egpPos(ID)
+        local Half=This:egpSize(ID)/2
+        return inrange(This:egpCursor(Player),Pos-Half,Pos+Half)
+    }
+}
+
+#[later to use it simply do 
+
+if(E is pressed){
+    if(Wirelink:egpClick(Player,Index)){
+        code
+    }
+}
+]#

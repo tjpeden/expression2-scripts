@@ -1,0 +1,17 @@
+@name Eye
+@inputs Start A B C D E F G H I J K Screen:wirelink
+@outputs FPS
+@persist T:ranger Ram1:array Count Res Focus IPStemp FPStemp
+
+if(!Start) {Res=16, Focus=75, FPS=0, Ram1=array():clone() }
+if(Start & Count<Res^2) {
+    Count++, X=(Count%Res)*90/Res-45, Y=floor(Count/Res)*90/Res-70, Range=rangerAngle(5000,X,Y):distance(), B=clamp(1.4-Range/Focus,0,1)*255
+    if(Ram1:number(Count)!=B) { W=1, Screen:writeCell(1023-Count, B), Ram1:setNumber(Count, B) }
+    Count++, X=(Count%Res)*90/Res-45, Y=floor(Count/Res)*90/Res-70, Range=rangerAngle(5000,X,Y):distance(), B=clamp(1.4-Range/Focus,0,1)*255
+    if(Ram1:number(Count)!=B) { W=1, Screen:writeCell(1023-Count, B), Ram1:setNumber(Count, B) }
+    Count++, X=(Count%Res)*90/Res-45, Y=floor(Count/Res)*90/Res-70, Range=rangerAngle(5000,X,Y):distance(), B=clamp(1.4-Range/Focus,0,1)*255
+    if(Ram1:number(Count)!=B) { W=1, Screen:writeCell(1023-Count, B), Ram1:setNumber(Count, B) }
+    Count++, X=(Count%Res)*90/Res-45, Y=floor(Count/Res)*90/Res-70, Range=rangerAngle(5000,X,Y):distance(), B=clamp(1.4-Range/Focus,0,1)*255
+    if(Ram1:number(Count)!=B) { W=1, Screen:writeCell(1023-Count, B), Ram1:setNumber(Count, B) }
+}
+if(Count>=Res^2) { Count=0, FPS=round(1/(curtime()-FPStemp)), FPStemp=curtime() }

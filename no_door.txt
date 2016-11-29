@@ -1,0 +1,23 @@
+@name No Door
+@persist D
+@outputs D
+
+if( first() ) {
+    runOnTick(1)
+    rangerDefaultZero(1)
+    rangerIgnoreWorld(1)
+#    rangerFilter( owner() )
+    rangerPersist(1)
+}
+
+Data = ranger( 100 )
+
+DLast = D
+D = Data:distance()
+if( D > 0 ) {
+    E = Data:entity()
+    if( E:isPlayer() ) {
+        if( D & !DLast ) { entity():soundPlay( 0, 0, "ambient/tones/elev1.wav" ) }
+        E:applyForce( E:up() * E:mass() )
+    }
+}

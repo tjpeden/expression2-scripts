@@ -1,0 +1,26 @@
+@name Base Spawner
+@inputs Prop:wirelink
+@persist Group:string Factory:gtable
+
+if( first() ) {
+    Group = "Factory"
+    dsJoinGroup( Group )
+    dsSetScope( 0 )
+    
+    Factory = gTable( Group )
+}
+
+if( clk( "spawn" ) ) { Prop["Spawn", number] = 0 }
+if( clk( "move" ) ) { dsSend( "move", Group, 1 ) }
+
+if( dsClk( "create" ) ) {
+    V = Factory["Platform", vector]
+    E = Prop:entity()
+    Pos = E:pos()
+    if( Pos:distance( V ) <= 100 ) {
+        Prop["Spawn", number] = 1
+        timer( "spawn", 1 )
+        timer( "move", 1000 )
+        E:soundPlay( 0, 0, "ambient/energy/spark5.wav" )
+    }
+}

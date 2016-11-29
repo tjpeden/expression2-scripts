@@ -1,0 +1,7 @@
+@name My Introduction to Holo
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+entity():isWeldedTo():setMaterial("models/props_c17/furniturefabric001a")

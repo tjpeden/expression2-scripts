@@ -1,0 +1,23 @@
+@name Skynet Worker
+@inputs 
+@outputs 
+@persist Self:table
+@trigger 
+
+if( first() | duped() ) {
+    #include "lib/mapreduce"
+    
+    function table:work(Data:table) {
+        local Entity = Data:popEntity()
+        local Radius = Entity:radius()
+        
+        findByClass("prop_physics")
+        local N = findInSphere(Entity:pos(), Radius * 10)
+        
+        This:finishWork(table(Entity:toString(), N))
+    }
+    
+    Self = newWorker("Skynet", "work")
+}
+
+Self:workerThink()

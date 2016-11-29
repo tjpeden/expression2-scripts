@@ -1,0 +1,13 @@
+@name Shelf Fix
+
+Self = entity()
+
+Es = Self:getConstraints()
+
+for( I = 1, Es:count() ) {
+    E = Es[I, entity]
+    if( E:type() == "prop_physics" ) {
+        E:setMass( 1000 )
+        E:setMaterial( "phoenix_storms/iron_rails" )
+    }
+}

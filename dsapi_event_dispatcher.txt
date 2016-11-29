@@ -1,0 +1,199 @@
+@name DSAPI Event Dispatcher
+@inputs 
+@outputs 
+@persist Events:table
+#Constants
+@persist SIG_LOW SIG_HIGH SIG_RISING SIG_FALLING
+@trigger 
+
+#DSAPI requirements
+if(dsClk("DSAPI.Ops")) {
+    dsSendDirect("R.DSAPI.Ops", dsGetSender(), ops())
+    exit()
+}
+
+if(dsClk("Service")) {
+    dsSendDirect("R.DSAPI.Service", dsGetSender(), array("DSAPI.Event"))
+    exit()
+}
+
+if(first()|duped()) {
+    runOnTick(1)
+    #Constants
+    #Signal Status (bitmask)
+    SIG_LOW=1
+    SIG_HIGH=2
+    SIG_RISING=4
+    SIG_FALLING=8
+    #Core extensions
+    function string table:index(What:table) {
+        foreach(Key,Value:table=This) {
+            if(Value==What) {
+                return Key
+            }
+        }
+    }
+    #Class Listener
+    function table newListener(Handler:entity, Signal:string, Mask) {
+        RetT=table()
+        RetT["Handler", entity]=Handler
+        RetT["Signal", string]=Signal
+        RetT["Mask", number]=Mask
+        return RetT
+    }
+    #Getters
+    function entity table:liHandler() {
+        return This["Handler", entity]
+    }
+    function string table:liSignal() {
+        return This["Signal", string]
+    }
+    function number table:liMask() {
+        return This["Mask", number]
+    }
+    #Public API
+    function number table:liApply(Bits) {
+        return bAnd(Bits, This:liMask())
+    }
+    function void table:liTrigger(Event:table) {
+        dsSendDirect(This:liSignal(), This:liHandler(), Event)
+    }
+    #Class Event
+    function table newEvent(Name:string) {
+        RetT=table()
+        RetT["Name", string]=Name
+        RetT["Listeners", table]=table()
+        RetT["Status", number]=0
+        RetT["Cause", table]=table()
+        return RetT
+    }
+    #Getters (all read-only)
+    function string table:evName() {
+        return This["Name", string]
+    }
+    function table table:evListeners() {
+        return This["Listeners", table]
+    }
+    function number table:evStatus() {
+        return This["Status", number]
+    }
+    function table table:evCause() {
+        return This["Cause", table]
+    }
+    #Triggering and Testing
+    function void table:evTrigger(Bits) {
+        for(I=1,This:evListeners():count()) {
+            Listener=This:evListeners()[I, table]
+            if(Listener:liApply(Bits)) {
+                Listener:liTrigger(This)
+            }
+        }
+    }
+    function void table:evTest(Transitional) {
+        if(Transitional) {
+            if(This:evStatus()) {
+                This:evTrigger(bOr(SIG_RISING, SIG_HIGH))
+            } else {
+                This:evTrigger(bOr(SIG_FALLING, SIG_LOW))
+            }
+        } else {
+            if(This:evStatus()) {
+                This:evTrigger(SIG_HIGH)
+            } else {
+                This:evTrigger(SIG_LOW)
+            }
+        }
+    }
+    #Status management
+    function void table:evRaise(Cause:table) {
+        This["Cause", table]=Cause
+        This["Status", number]=1
+        This:evTest(1)
+        This["Status", number]=0
+        This:evTest(1)
+    }
+    function void table:evSet(Status, Cause:table) {
+        This["Cause", table]=Cause
+        OldStatus=This:evStatus()
+        This["Status", number]=Status
+        This:evTest(This:evStatus()!=OldStatus)
+    }
+    function void table:evToggle(Cause:table) {
+        This["Cause", table]=Cause
+        This["Status", number]=!This:evStatus()
+        This:evTest(1)
+    }
+    #Listening
+    function void table:evAddListener(Listener:table) {
+        This:evListeners():pushTable(Listener)
+    }
+    function void table:evRemoveListener(Listener:table) {
+        This:evListeners():removeTable(This:evListeners():index(Listener))
+    }
+    #Tick function
+    function void table:evTick() {
+        This:evTest(0)
+    }
+    #Class Cause
+    function table newCause(Raiser:entity, Parameters:table) {
+        RetT=table()
+        RetT["Raiser", entity]=Raiser
+        RetT["Parameters", table]=Parameters
+        return RetT
+    }
+    Events=table()
+    dsJoinGroup("DSAPI")
+    dsJoinGroup("DSAPI.Event")
+    dsSetScope(2) #Everyone can use this
+    dsSend("DSAPI.Announce", "DSAPI", array("DSAPI.Event"))
+}
+
+if(tickClk()) {
+    foreach(Key,Event:table=Events) {
+        Event:evTick()
+    }
+}
+
+if(dsClk("DSAPI.Event.New")) {
+    Events[dsGetString(), table]=newEvent(dsGetString())
+}
+
+if(dsClk("DSAPI.Event.Listen")) {
+    Params=dsGetTable()
+    Name=Params["Name", string]
+    Signal=Params["Signal", string]
+    Mask=Params["Mask", number]
+    Listener=newListener(dsGetSender(), Signal, Mask)
+    if(Events:exists(Name)) {
+        Events[Name, table]:evAddListener(Listener)
+    }
+}
+
+if(dsClk("DSAPI.Event.Raise")) {
+    Params=dsGetTable()
+    Name=Params:removeString("Name")
+    if(Events:exists(Name)) {
+        Events[Name, table]:evRaise(newCause(dsGetSender(), Params))
+    }
+}
+
+if(dsClk("DSAPI.Event.Set")) {
+    Params=dsGetTable()
+    Name=Params:removeString("Name")
+    Status=Params:removeNumber("Status")
+    if(Events:exists(Name)) {
+        Events[Name, table]:evSet(Status, newCause(dsGetSender(), Params))
+    }
+}
+
+if(dsClk("DSAPI.Event.Toggle")) {
+    Params=dsGetTable()
+    Name=Params:removeString("Name")
+    if(Events:exists(Name)) {
+        Events[Name, table]:evToggle(newCause(dsGetSender(), Params))
+    }
+}
+
+if(dsClk("DSAPI.Event.List")) {
+    dsSendDirect("R.DSAPI.Event.List", dsGetSender(), Events:clone())
+}

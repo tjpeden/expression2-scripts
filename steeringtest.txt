@@ -1,0 +1,15 @@
+@name Steering Test
+@inputs A D FLen RLen
+@outputs Left Right Stablizer
+@persist 
+@trigger all
+
+TurnMag = 5 # Magnitude of turn
+Def = 5 # Default/Straight position
+
+Stablizer = Def # To help keep straight
+
+Dir = A - D
+
+Left  = Def - ( Dir * TurnMag )
+Right = Def + ( Dir * TurnMag )

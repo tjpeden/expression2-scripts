@@ -1,0 +1,44 @@
+@name MyHopper
+@persist HI_BALL RADIUS
+
+if(first()|duped()) {
+    entity():setColor(vec4(0, 0, 0, 0))
+    entity():setMass(1000)
+    HI_BALL=1
+    RADIUS=25
+    holoCreate(HI_BALL)
+    holoModel(HI_BALL, "hqsphere")
+    holoColor(HI_BALL, vec(255, 0, 0), 128)
+    holoScale(HI_BALL, vec(3, 3, 3))
+    holoParent(HI_BALL, entity())
+    runOnTick(1)
+}
+
+Pos=entity():pos()
+TR_POSX=rangerOffset(Pos, Pos+vec(RADIUS, 0, 0))
+TR_NEGX=rangerOffset(Pos, Pos+vec(-RADIUS, 0, 0))
+TR_POSY=rangerOffset(Pos, Pos+vec(0, RADIUS, 0))
+TR_NEGY=rangerOffset(Pos, Pos+vec(0, -RADIUS, 0))
+TR_POSZ=rangerOffset(Pos, Pos+vec(0, 0, RADIUS))
+TR_NEGZ=rangerOffset(Pos, Pos+vec(0, 0, -RADIUS))
+
+EMASS=entity():mass()
+
+if(TR_POSX:distance()<RADIUS) {
+    applyForce(vec(-1000*EMASS, 0, 0))
+}
+if(TR_NEGX:distance()<RADIUS) {
+    applyForce(vec(1000*EMASS, 0, 0))
+}
+if(TR_POSY:distance()<RADIUS) {
+    applyForce(vec(0, -1000*EMASS, 0))
+}
+if(TR_NEGY:distance()<RADIUS) {
+    applyForce(vec(0, 1000*EMASS, 0))
+}
+if(TR_POSZ:distance()<RADIUS) {
+    applyForce(vec(0, 0, -1000*EMASS))
+}
+if(TR_NEGZ:distance()<RADIUS) {
+    applyForce(vec(0, 0, 1000*EMASS))
+}

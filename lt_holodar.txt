@@ -1,0 +1,100 @@
+@name LT_Holodar
+@inputs Radius Scale Tick Prune
+@outputs 
+@persist Tracking:array Found:array Self:entity Idx MAX_HOLOS MAX_ENTID Constrained:array
+@trigger Tick Prune
+
+# Grissess' low-tick holodar
+
+if(first()) {
+    Tracking=array()
+    Found=array()
+    Self=entity()
+    Idx=1
+    MAX_HOLOS=256
+    MAX_ENTID=512 #Source actually limits it to 2048...that's a lot tho...
+    Constrained=Self:getConstraints()
+}
+
+if(~Tick) {
+    if(!findCanQuery()) {
+        exit()
+    }
+    findInSphere(Self:pos(), Radius)
+    Arr=findToArray()
+    SIdx=Idx
+    for(I=1,min(Arr:count(), MAX_HOLOS)) {
+        Ent=Arr[I, entity]
+        Cont=0
+        for(J=1,Constrained:count()) {
+            if(Constrained[J, entity]==Ent) {
+                Cont=1
+            }
+        }
+        if(Cont) {
+            continue
+        }
+        if(Tracking[Ent:id(), number]) {
+            holoPos(Tracking[Ent:id(), number], Self:pos()+((Ent:pos()-Self:pos())/Scale))
+            holoAng(Tracking[Ent:id(), number], Ent:angles())
+        } else {
+#            print(holoRemainingSpawns())
+#            if(!holoCanCreate()) {
+#                #print("Warning! Ran out of spawns! "+holoRemainingSpawns():toString())
+#                break
+#            }
+            if(Ent:type()=="player") {
+                Scl=vec(0.25,0.25,0.25)
+                Alpha=127
+                if(Ent:isAdmin()) {
+                    Col=vec(255,0,0)
+                } else {
+                    Col=vec(255,255,0)
+                }
+            } elseif(Ent:type()=="prop_physics") {
+                Scl=vec(0.25,0.25,0.25)
+                Alpha=255
+                Col=vec(0,255,0)
+            } elseif(Ent:isWeapon()) {
+                Scl=vec(0.1,0.1,0.1)
+                Alpha=20
+                Col=vec(127,127,127)
+            } else {
+                Scl=vec(0.25,0.25,0.25)
+                Alpha=255
+                Col=vec(0,0,255)
+            }
+            holoCreate(Idx, Self:pos()+((Ent:pos()-Self:pos())/Scale), Scl, Ent:angles(), Col)
+            holoAlpha(Idx, Alpha)
+            Tracking[Ent:id(), number]=Idx
+            Idx=Idx+1
+            if((Idx-SIdx)>25) {
+                break
+            }
+        }
+    }
+}
+
+if(~Prune) {
+    if(!findCanQuery()) {
+        exit()
+    }
+    findInSphere(Self:pos(), Radius)
+    Arr=findToArray()
+    Missing=Tracking:clone()
+    for(I=1,min(Arr:count(),MAX_HOLOS)) {
+        Ent=Arr[I, entity]
+        if(Missing[Ent:id(), number]) {
+            Missing[Ent:id(), number]=0
+        }
+    }
+    #Missing now contains a list of lost EIDS -> their HIDS
+    #Unfortunately, we can't just rely on count()
+    #So this arbitrary value stays
+    for(I=1,MAX_ENTID) {
+        if(Missing[I, number]) {
+            holoDelete(Missing[I, number])
+            Tracking[I, number]=0
+        }
+    }
+}

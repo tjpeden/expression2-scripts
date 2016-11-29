@@ -1,0 +1,17 @@
+@name Hide Owner
+@persist Onwer:entity Cloaked
+
+if( first() ) {
+    Owner = owner()
+    dsSend( "Bind.Attack2", "DSS.Events", 1 )
+}
+
+if( dsClk( "Attack2.Triggered" ) ) {
+    T = dsGetTable()
+    
+    if( T["weapon_type", string] == "weapon_physgun" ) {
+        print( "Cloak Toggled" )
+        Owner:setMaterial( ( Cloaked ? "" : "phoenix_storms/chrome" ) )
+        Cloaked = !Cloaked
+    }
+}

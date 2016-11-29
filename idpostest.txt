@@ -1,0 +1,47 @@
+@name ID Position Test
+@inputs Ship:entity Team:string
+@outputs ID
+@persist ID
+@trigger all
+
+Yes=1,No=!Yes
+Ident = "Ident"
+Count = "Count"
+
+signalSetGroup( Team )
+
+if( first() ) {
+    runOnSignal( Ident, Yes )
+    runOnSignal( Count, Yes )
+}
+
+if( Team:length() == 0 ) { exit() }
+
+if( ID == 0 ) {
+    gSetGroup( Team )
+    
+    Num = gGetNum("NextID")
+    ID = ( Num == 0 ? 1 : Num )
+    
+    gSetNum( "NextID", ID + 1 )
+    print( "Ship Number: " + ID )
+}
+
+if( signalClk( Team, Count, Yes ) ) {
+    gSetGroup( Team )
+    print( "Received signal: " + Count ) 
+    
+    Num = gGetNum( "Num" )
+    gSetNum( "Num", Num + 1 )
+}
+
+if( signalClk( Team, Ident, Yes ) ) {
+    gSetGroup( Team )
+    
+    if( gGetNum("ID") == ID ) {
+        Pos = vec( gGetNum("X"), gGetNum("Y"), gGetNum("Z") )
+        IsMyPos = ( Pos == Ship:pos() ? Yes : No )
+        gSetNum( "Response", IsMyPos )
+    }
+}
+    

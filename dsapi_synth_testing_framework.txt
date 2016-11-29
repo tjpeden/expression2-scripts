@@ -1,0 +1,38 @@
+@name DSAPI Synth Testing Framework
+@inputs 
+@outputs 
+@persist NextChIndex
+@trigger 
+
+if(first()) {
+    NextChIndex=1
+    function table newNote(Octave, Pitch, Duration) {
+        RetT=table()
+        RetT["Octave", number]=Octave
+        RetT["Pitch", number]=Pitch
+        RetT["Duration", number]=Duration
+        return RetT
+    }
+    function table newChannel(Emitter:entity, Instrument:string, Notes:table) {
+        RetT=table()
+        RetT["Emitter", entity]=Emitter
+        RetT["Instrument", string]=Instrument
+        RetT["Index", number]=NextChIndex
+        NextChIndex+=1
+        RetT["Notes", table]=Notes
+        RetT["NextT", number]=0
+        return RetT
+    }
+    function table table:chNotes() {
+        return This["Notes", table]
+    }
+    Chns=table()
+    TriChan=newChannel(entity(), "/synth/triangle_440.wav", table())
+    TriChan:chNotes():pushTable(newNote(0, 3, 1))
+    TriChan:chNotes():pushTable(newNote(0, 5, 1))
+    TriChan:chNotes():pushTable(newNote(0, 7, 1))
+    TriChan:chNotes():pushTable(newNote(0, 8, 1))
+    TriChan:chNotes():pushTable(newNote(0, 10, 1))
+    Chns:pushTable(TriChan)
+    dsSend("DSAPI.Synth.Play", "DSAPI.Synth", Chns)
+}

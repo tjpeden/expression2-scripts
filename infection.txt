@@ -1,0 +1,39 @@
+@name E2:Virus
+@inputs 
+@outputs NumInfected
+@persist Target:entity Prev:entity NumInfected
+@persist Weight
+@trigger all
+
+Mag = 500
+
+if( first() ) {
+    interval( 5000 )
+    Target = entity():isConstrainedTo()
+} else {
+    if( Target:hasConstraints() > 1 ) {
+        Next = Target:isConstrainedTo()
+        
+        if( Next == Prev ) {
+            Target = Target:isConstrainedTo( 2 )
+        }
+        
+        Target = Next
+        
+        interval( 5000 )
+    } else {
+        exit()
+    }
+}
+
+print( "Prev: " + (Prev ? Prev:id() : -1) )
+print( "Target: " + Target:id() )
+
+NumInfected++
+Weight = ( NumInfected % 2 == 0 ? Mag : -Mag )
+Blue = min( NumInfected * 10, 255 )
+Target:setColor( 0, 0, Blue )
+Target:setMass( Weight )
+
+print( "Infected: " + NumInfected )
+Prev = Target

@@ -1,0 +1,35 @@
+@name Drone Defense Controller
+@inputs Bay:wirelink
+@outputs Self:entity Target:entity Position:vector
+@persist Self:entity Target:entity Position:vector
+@persist Threshold Alive
+
+if( first() ) {
+    runOnTick(1)
+    
+    Threshold = 5000
+    
+    findExcludeEntity( owner() )
+}
+
+if( !Self ) {
+    if( ->Bay ) {
+        Self = Bay:entity()
+        Position = Self:pos()
+    }
+}
+
+if( Self & tickClk() ) {
+    if( !Target & findCanQuery() ) {
+        findByClass( "npc_*" )
+        N = findClipToSphere( Position, Threshold )
+        
+        if( N > 0 ) {
+            Target = findClosest( Position )
+        }
+    }
+    
+    if( Target ) {
+        Bay["Entity", entity] = Target
+    }
+}

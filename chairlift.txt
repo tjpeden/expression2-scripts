@@ -1,0 +1,29 @@
+@name 
+@inputs Pod:wirelink Length
+@outputs In Out
+
+interval( 20 )
+
+Active = Pod:number( "Active" )
+Chair = Pod:entity( "Entity" )
+
+OnGround = Chair:isOnGround()
+
+if( Active ) {
+    if( Length > 1 ) {
+        In = 1
+    }
+    else {
+        In = 0
+        Pod:setNumber( "Eject", 1 ) # Kick out of chair
+    }
+}
+
+if( !Active ) {
+    if( !OnGround ) {
+        Out = 1
+    }
+    else {
+        Out = 0
+    }
+}    

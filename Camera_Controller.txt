@@ -1,0 +1,201 @@
+@name Camera Controller
+@inputs
+@outputs Target:entity Mode:number Pos:vector OutPos:vector OutAng:angle
+@persist MODE_OFF MODE_THROUGH MODE_BEHIND MODE_FREECAM MODE_MANUAL
+@persist Env:table LastUse
+@trigger 
+
+if(first()|duped()) {
+    #include "lib/command"
+    #include "lib/obfuscate"
+    
+    runOnChat(1)
+    runOnTick(1)
+#[    if(!cameraRemainingSpawns()) {
+        hint("Cannot create a camera. Try using a cam controller instead.", 7)
+    }
+    cameraCreate(1)]#
+    
+    lightCreate(1, vec(0, 0, 0), vec(255, 255, 255), 4096, 16)
+    lightToggle(1, 1)
+    
+    MODE_OFF=0
+    MODE_THROUGH=1
+    MODE_BEHIND=2
+    MODE_FREECAM=3
+    MODE_MANUAL=4
+    
+    Mode=MODE_OFF
+    
+    function void ccThink() {
+        local P=vec()
+        local A=ang()
+        if(Mode==MODE_THROUGH|Mode==MODE_BEHIND|Mode==MODE_FREECAM) {
+            P=Target:pos()
+            if(Target:isPlayer()) {
+                P=P+vec(0, 0, Target:height())
+            }
+            if(Mode==MODE_FREECAM) {
+                A=owner():eyeAngles()
+            } else {
+                if(Target:isPlayer()) {
+                    A=Target:eyeAngles()
+                } else {
+                    A=Target:angles()
+                }
+            }
+            if(Mode==MODE_BEHIND) {
+                local CP=P+A:forward()*-200+A:up()*50
+                local RD=rangerOffset(P, CP)
+                P=RD:pos()
+            }
+        } elseif(Mode==MODE_MANUAL) {
+            P=Pos
+            if(Target) {
+                A=(Target:pos()-Pos):toAngle()
+            } else {
+                A=owner():eyeAngles()
+            }
+            local SF=0
+            local SR=0
+            if(owner():keyForward()) {
+                SF=SF+3
+            }
+            if(owner():keyBack()) {
+                SF=SF-3
+            }
+            if(owner():keyLeft()) {
+                SR=SR-3
+            }
+            if(owner():keyRight()) {
+                SR=SR+3
+            }
+            if(owner():keySprint()) {
+                SR=SR*5
+                SF=SF*5
+            }
+            if(owner():keyDuck()) {
+                SR=SR/3
+                SF=SF/3
+            }
+            P=P+A:forward()*SF+A:right()*SR
+            Pos=P
+        }
+#[        cameraPos(1, P)
+        cameraAng(1, A)]#
+        lightPos(1, P)
+        OutPos=P
+        OutAng=A
+        if(owner():keyUse()&!LastUse) {
+            if(Mode==MODE_OFF) {
+                print(owner():aimEntity():toString())
+            } else {
+                print(rangerOffset(P, P+A:forward()*8192):entity():toString())
+            }
+        }
+        LastUse=owner():keyUse()
+    }
+    
+    function void ccThrough(Args:table, Ret:table) {
+        Target=Args[1, entity]
+        if(!Target) {
+            Target=owner():aimEntity()
+        }
+        print("Target set: "+Target:toString())
+        #if(Mode==MODE_OFF) {cameraToggle(1, 1)}
+        Mode=MODE_THROUGH
+    }
+    
+    function void ccBehind(Args:table, Ret:table) {
+        Target=Args[1, entity]
+        if(!Target) {
+            Target=owner():aimEntity()
+        }
+        print("Target set: "+Target:toString())
+        #if(Mode==MODE_OFF) {cameraToggle(1)}
+        Mode=MODE_BEHIND
+    }
+    
+    function void ccFreeCam(Args:table, Ret:table) {
+        if(Args[1, entity]) {
+            Target=Args[1, entity]
+        }
+        print("Target set: "+Target:toString())
+        #if(Mode==MODE_OFF) {cameraToggle(1)}
+        Mode=MODE_FREECAM
+    }
+    
+    function void ccManualPos(Args:table, Ret:table) {
+        Pos=vec(Args[1, number], Args[2, number], Args[3, number])
+        #if(Mode==MODE_OFF) {cameraToggle(1)}
+        Mode=MODE_MANUAL
+    }
+    
+    function void ccManualSelf(Args:table, Ret:table) {
+        Pos=owner():pos()+vec(0, 0, owner():height())
+        #if(Mode==MODE_OFF) {cameraToggle(1)}
+        Mode=MODE_MANUAL
+    }
+    
+    function void ccManualCur(Args:table, Ret:table) {
+        Pos=OutPos
+        Mode=MODE_MANUAL
+    }
+    
+    function void ccManualCurNoTarget(Args:table, Ret:table) {
+        Pos=OutPos
+        Mode=MODE_MANUAL
+        Target=noentity()
+    }
+    
+    function void ccSetTarg(Args:table, Ret:table) {
+        Target=Args[1, entity]
+        print("Target set: "+Target:toString())
+    }
+    
+    function void ccReset(Args:table, Ret:table) {
+        #if(Mode!=MODE_OFF) {cameraToggle(1)}
+        Mode=MODE_OFF
+    }
+    
+    function void clLight(Args:table, Ret:table) {
+        lightToggle(1, Args[1, number])
+    }
+    
+    function void clBrightness(Args:table, Ret:table) {
+        lightBrightness(1, Args[1, number])
+    }
+    
+    function void clDistance(Args:table, Ret:table) {
+        lightDistance(1, Args[1, number])
+    }
+    
+    function void clColor(Args:table, Ret:table) {
+        lightColor(1, vec(Args[1, number], Args[2, number], Args[3, number]))
+    }
+    
+    Env=newEnv()
+    Env:envAddCommand(newCommand("through", "ccThrough", "Op"))
+    Env:envAddCommand(newCommand("behind", "ccBehind", "Op"))
+    Env:envAddCommand(newCommand("freecam", "ccFreeCam", "Op"))
+    Env:envAddCommand(newCommand("manpos", "ccManualPos", "nnn"))
+    Env:envAddCommand(newCommand("manself", "ccManualSelf", ""))
+    Env:envAddCommand(newCommand("mancur", "ccManualCur", ""))
+    Env:envAddCommand(newCommand("mancurnt", "ccManualCurNoTarget", ""))
+    Env:envAddCommand(newCommand("settarg", "ccSetTarg", "Op"))
+    Env:envAddCommand(newCommand("reset", "ccReset", ""))
+    Env:envAddCommand(newCommand("light", "clLight", "n"))
+    Env:envAddCommand(newCommand("brightness", "clBrightness", "n"))
+    Env:envAddCommand(newCommand("distance", "clDistance", "n"))
+    Env:envAddCommand(newCommand("color", "clColor", "nnn"))
+}
+
+if(chatClk(owner())) {
+    if(Env:envExec(owner():lastSaid())) {
+        hideChat(1)
+    }
+}
+
+if(tickClk()) {
+    ccThink()
+}

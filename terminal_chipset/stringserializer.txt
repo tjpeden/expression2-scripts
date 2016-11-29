@@ -1,0 +1,33 @@
+@name String Serializer
+@inputs Text:string
+@outputs Char New Ready
+@persist String:string Index New
+#@trigger all
+
+Yes=1 # Boolean Constants
+EOS = 10 # End of String Constant
+
+if( first() ) {
+    Ready = 1
+}
+
+# If we have recieved a new
+# string we need to reset
+if( ~Text ) {
+    Ready = 0 # Tell buffer controller we are busy
+    Index = 1 # Start from begining of string
+    String = Text # Keep local (persistant) copy of new string
+}
+
+# Send ASCII char code or EOS
+# if finished
+if( Index <= String:length() ) {
+    Char = toByte( String, Index )
+    Index++
+    interval( 20 )
+} else {
+    Char = EOS
+    Ready = 1
+}
+
+New = !New

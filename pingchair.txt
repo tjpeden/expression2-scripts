@@ -1,0 +1,71 @@
+@name Remote Telekinesis
+@inputs PS:wirelink C:wirelink
+@persist P:vector G CE:entity Mouse1 Mouse2 Space CA
+
+SL = Space
+Space = PS["Space", number]
+M1L = Mouse1
+Mouse1 = PS["Mouse1", number]
+M2L = Mouse2
+Mouse2 = PS["Mouse2", number]
+
+interval(1)
+
+if( PS["Active", number] & PS["Entity", entity]:driver() != owner() ) {
+    PS["Terminate", number] = 1
+}
+
+C["Activated", number] = PS["Active", number]
+
+OD = ang(PS["Elevation", number], PS["Bearing", number], 0)
+VD = vec(OD)
+C["Pitch", number] = -VD:x()
+C["Yaw", number] = VD:y()
+
+if (PS["W", number] | PS["S", number]) {
+    OS = vec(1, 0, 0):rotate(OD)
+    P = P + OS:setZ(-OS:z()) * (10 - (PS["S", number] * 2) + (PS["Shift", number] * 9)) * (PS["W", number] - PS["S", number])
+}
+if (PS["A", number] | PS["D", number]) {
+    OS = vec(1, 0, 0):rotate(OD + ang(-OD:pitch(), 90, 0))
+    P = P + OS:setZ(-OS:z()) * (6 + (PS["Shift", number] * 8)) * (PS["A", number] - PS["D", number])
+}
+if (PS["R", number] | first()) {
+    P = owner():pos() + vec(0, 0, 120)
+    PS["Crosshairs", number] = 1
+    C["Parent", entity] = PS["Entity", entity]:driver()
+}
+C["Position", vector] = P
+
+AD = vec(1, 0, 0):rotate(OD)
+AD = AD:setZ(-AD:z())
+if (!M2L & Mouse2 & !G) {
+    CE = rangerOffset(2 ^ 32, P, AD):entity()
+    if (CE:type() == "prop_physics") {
+        G = 1
+        hint("Grabbed " + CE:model(), 5)
+    } elseif (CE) { hint("You can't grab objects of this type.", 5) }
+} elseif (!M2L & Mouse2 & G) {
+    if (Space) { CE:setAlpha(CA) }
+    G = 0
+    hint("Released " + CE:model(), 5)
+}
+if (G & CE:type() == "prop_physics") {
+    if (Space) {
+        if ((~G & G) | !SL) { CA = CE:getAlpha() }
+        if (CE:getAlpha() > 31) { CE:setAlpha(31) }
+    }
+    if (SL & !Space) { CE:setAlpha(CA) }
+    CE:applyForce(-CE:mass() * CE:vel())
+    TP = P + AD * (120 + CE:radius())
+    CE:applyForce(CE:mass() * (TP - CE:pos()):normalized() * CE:pos():distance(TP) * 80)
+    if (!M1L & Mouse1) {
+        if (Space) { CE:setAlpha(CA) }
+        CE:applyForce(CE:mass() * (AD + vec():setZ(0.1)) * 50000)
+        G = 0
+        hint("Threw " + CE:model(), 5)
+    }
+} elseif (G & CE:type() != "prop_physics") {
+    G = 0
+    hint("Previously held object no longer exists.", 5)
+}

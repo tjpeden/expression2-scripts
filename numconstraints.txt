@@ -1,0 +1,27 @@
+@name What's What
+@inputs 
+@outputs Constrained
+@persist 
+@trigger all
+
+Yes=1,No=!Yes
+
+if( first() ) {
+    runOnTick(Yes)
+}
+
+E = owner():aimEntity()
+
+Constrained = E:hasConstraints()
+E:setColor( 0, 0, 255 )
+
+if( Constrained >= 1 ) {
+    First = E:isConstrainedTo(1)
+    First:setColor( 255, 0, 0 )
+}
+
+if( Constrained >= 2 ) {
+    Second = E:isConstrainedTo(2)
+    Second:setColor( 0, 255, 0 )
+}
+

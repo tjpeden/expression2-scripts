@@ -1,0 +1,70 @@
+@name DCPC Test
+@persist Client:entity
+@persist C_BLACK C_RED C_GREEN C_BLUE C_YELLOW C_MAGENTA C_CYAN C_WHITE
+
+if(first()|duped()) {
+    C_BLACK=0
+    C_RED=900
+    C_GREEN=90
+    C_BLUE=9
+    C_YELLOW=990
+    C_MAGENTA=909
+    C_CYAN=99
+    C_WHITE=999
+    function table newAttribs() {
+        local RetT=table()
+        RetT["FG", number]=C_WHITE
+        RetT["BG", number]=C_BLACK
+        RetT["Flash", number]=0
+        return RetT
+    }
+    function number table:atFG() {
+        return This["FG", number]
+    }
+    function number table:atBG() {
+        return This["BG", number]
+    }
+    function number table:atFlash() {
+        return This["Flash", number]
+    }
+    function void table:atSetFG(FG) {
+        This["FG", number]=FG
+    }
+    function void table:atSetBG(BG) {
+        This["BG", number]=BG
+    }
+    function void table:atSetFlash(Flash) {
+        This["Flash", number]=Flash
+    }
+    function vector table:atToColorVec() {
+        local FG=This:atFG()
+        local R=(FG/100)%10
+        local G=(FG/10)%10
+        local B=FG%10
+        return vec(R*(255/9), G*(255/9), B*(255/9))
+    }
+    function void write(Str:string, Attribs:table) {
+        local T = table()
+        T["Str", string] = Str
+        T["Attribs", table] = Attribs
+        dsSendDirect("DCPC.WriteLines", Client, T)
+    }
+    print("Type: !connect " + entity():id())
+}
+
+if(dsClk("DCPC.Connect")) {
+    Client = dsGetEntity()
+    Defaults = newAttribs()
+    write("Welcome!", Defaults)
+}
+
+if(dsClk("DCPC.Shell")) {
+    print(entity():id()+": DCPC.Shell")
+    Line = dsGetTable()["Command", string]
+    Parts = Line:explode(" ")
+    Cmd = Parts:shiftString()
+    if(Cmd=="play") {
+        print("Playing sound.")
+        entity():soundPlay(1, 0, "/stargate/teleport.mp3")
+    }
+}

@@ -1,0 +1,19 @@
+@name 
+@inputs 
+@outputs Trigger
+@persist 
+@trigger all
+
+Yes=1,No=!Yes
+
+if( first() ) {
+    runOnTick( Yes )
+}
+
+R = ranger( 100 )
+
+if( R:distance() < 100 & R:entity():isVehicle() ) {
+    Trigger = Yes
+} else {
+    Trigger = No
+}

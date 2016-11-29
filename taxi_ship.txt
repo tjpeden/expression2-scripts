@@ -1,0 +1,18 @@
+@name Taxi Ship
+@inputs Cam:wirelink Pod:wirelink
+@outputs 
+@persist E:entity D
+
+if( first() ) {
+    runOnTick(1)
+}
+
+if( !E ) {
+    E = Pod["Entity", entity]
+    Cam["Parent", entity] = E
+}
+
+Cam["Activated", number] = Pod["Active", number]
+
+Cam["Position", vector] = Pod:entity():pos() + Pod:entity():up() * 200
+Cam["Angle", angle] = ang( -Pod["Elevation", number], Pod["Bearing", number], 0 )

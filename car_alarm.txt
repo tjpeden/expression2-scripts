@@ -1,0 +1,47 @@
+@name Car Alarm
+@persist Vehicle:entity Owner:entity Driver:entity Lock Hold Floating Altitude
+@outputs Lock Turrets Hold Floating Altitude Force:vector
+@model models/props_junk/harpoon002a.mdl
+
+if( first() ) {
+    runOnTick(1)
+    E = entity()
+    E:setMass(0.0001)
+    Vehicle = E:isWeldedTo()
+    Owner = Vehicle:owner()
+    Altitude = -1
+}
+
+LockLast = Lock
+HoldLast = Hold
+Driver = Vehicle:driver()
+
+Distance = Owner:pos():distance( Vehicle:pos() )
+Lock = Distance <= 100 ? 0 : 1
+
+if( Lock != LockLast ) { Vehicle:lockPod( Lock ) }
+
+if( LockLast & !Lock ) {
+    Vehicle:soundPlay( "alarm", 0, "common/bugreporter_succeeded.wav" )
+} elseif( !LockLast & Lock ) {
+    Vehicle:soundPlay( "alarm", 0, "common/warning.wav" )
+}
+
+if( Driver ) {
+    Hold = Driver:keyReload()
+    
+    if( Hold & !HoldLast ) {
+        Floating = !Floating
+        if( Floating ) { Altitude = Vehicle:pos():z() }
+    }
+    
+    Force = vec()
+    
+    if( Driver:keyAttack1() ) { Force += ( Vehicle:forward() * 10000 ):setZ(0) }
+    if( Driver:keyPressed("SPACE") ) { Force += ( vec( 0, 0, 1/66 ) * Vehicle:mass() * gravity() ) }
+    if( Floating ) { Force += ( Vehicle:pos():setZ(Altitude) - Vehicle:pos() - ( Vehicle:vel() * vec(0, 0, 1) ) ) * Vehicle:mass() }
+    
+    Vehicle:applyForce( Force )
+}
+
+if( !Owner ) { selfDestructAll() }

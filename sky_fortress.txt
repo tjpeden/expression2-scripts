@@ -1,0 +1,63 @@
+@name Sky Fortress
+@persist Self:entity Owner:entity Base:entity
+@persist Enabled Ground Sky Z G
+
+if( first() ) {
+    runOnTick(1)
+    
+    dsSend( "Bind.Attack2", "DSS.Events", 1 )
+    
+    Self = entity()
+    Owner = owner()
+    Base = Self:isWeldedTo()
+    
+    Self:setMaterial( "phoenix_storms/metalset_1-2" )
+    
+    Base:setMass( 50000 )
+    Base:setMaterial( "Models/XQM/LightLinesRed" )
+    
+    rangerFilter( Base )
+    rangerFilter( Base:getConstraints() )
+    RD = rangerOffset( vec( 0, 0, 1000 ), vec( 0, 0, -1 ) )
+    Ground = ceil( RD:pos():z() ) + 7
+    
+    Sky = 1500
+    
+    G = gravity() / 66
+    
+    Z = Ground
+    Enabled = 1
+}
+
+if( dsClk( "Attack2.Triggered" ) ) {
+    Result = dsGetTable()
+    E = Result["aim_entity", entity]
+    
+    if( Result["weapon_type", string] == "weapon_physgun" & E == Base ) {
+        if( Z == Sky ) { Z = Ground } else { Z = Sky }
+    }
+}
+
+if( Enabled ) {
+    BasePos = Base:pos()
+    
+    TarQ = quat( ang() )
+    CurQ = quat( Base )
+    
+    Q = TarQ/CurQ
+    V = Base:toLocal( rotationVector( Q ) + BasePos )
+    Base:applyTorque( ( 150 * V - 12 * Base:angVelVector() ) * Base:inertia() )
+    
+    CurrentZ = BasePos:z()
+    Diff = CurrentZ - Z
+    
+    if( Diff < 0 ) {
+        if( abs( Diff ) > G ) { NextZ = CurrentZ + G } else { NextZ = Z }
+    } elseif( Diff > 0 ) {
+        if( Diff > G ) { NextZ = CurrentZ - 1 } else { NextZ = Z }
+    } else {
+        NextZ = Z
+    }
+    
+    Base:applyForce( ( ( vec( 0, 0, NextZ ) -Base:massCenter() ) * 10 - Base:vel() ) * Base:mass() )
+}

@@ -1,0 +1,102 @@
+@name Artillery
+@persist Mode:string T:entity Cur R:array Fire Spos:vector Randx TV:vector F1:vector StDist Go Sound2 Sound
+@persist Lock Trigger
+@trigger all
+runOnTick(1)
+
+O = owner()
+E = entity():isWeldedTo()
+Weapon = O:weapon():type() == "weapon_physcannon"
+
+if( first() | duped() ) {
+    Go = 0
+    Fire = 0
+    Spos = E:pos()
+    print("Expression by shoffing. Contact me at shoffing@gmail.com with any questions.")
+    print("Rewrite by tj.peden")
+    E:setMass(1200)
+}
+
+if(clk("start")) {
+    Go = 1
+}
+
+LockLast = Lock
+Lock = O:keyAttack2()
+
+if(Lock & !LockLast & Weapon) {
+    TT = O:aimEntity() # Temp target, until we verify live target
+    
+    if(TT:isAlive()) {
+        T = TT # Set target
+        O:soundPlay( "notify", 0, "bot/target_acquired.wav" )
+    }
+}
+
+TriggerLast = Trigger
+Trigger = O:keyAttack1()
+
+if(Trigger & !TriggerLast & Weapon) {
+    Fire = 1
+    O:soundPlay( "notify", 0, "bot/attacking_enemies.wav" )
+    timer("start", randint(0, 10000))
+}
+
+if(Go) {
+    if(Fire) {
+        if(!StDist) {
+            StDist = abs(E:pos():x() - T:pos():x()) + abs(E:pos():y() - T:pos():y())
+        }
+        
+        Dist = abs(E:pos():x() - T:pos():x()) + abs(E:pos():y() - T:pos():y())
+        
+        if(Dist > StDist/2 & Mode != "drop") {
+            Mode = "shootup"
+        } elseif(Mode != "superdown") {
+            Mode = "drop"
+        }
+        
+        Dist = E:pos():distance(T:pos())
+        if(Mode == "shootup") {
+            F1 = (T:pos()+vec(0,0,T:height()) - E:pos()) * E:mass() - E:vel()*25
+            F2 = vec(0, 0, Dist*E:mass())
+            E:applyForce(F1 + F2)
+        } elseif(Mode == "drop") {
+            if(!Randx) { 
+                Randx = randint(-250, 250)
+                Randy = randint(-250, 250) 
+                TV = T:pos() + vec(Randx, Randy, T:height())
+                F = TV - E:pos()
+                F1 = vec(F:x(), F:y(), F:z())
+            } 
+            
+            E:applyForce(F1 * E:mass())
+        
+            if(E:pos():distance(TV) < 100) {
+                Mode = "superdown"
+            }
+        } elseif(Mode == "superdown") {
+            E:applyOffsetForce(E:up() * 10, E:forward()*10000)
+            E:applyOffsetForce(E:up() * -10, E:forward()*-10000)
+            E:applyForce(vec(0, 0, -999999999))
+        }
+        
+        if(!Sound & E:pos():distance(TV) < 1250) {
+            O:soundPlay( 0, 0, "weapons/mortar/mortar_shell_incomming1.wav" )
+            #soundVolume(0,3)
+            Sound = 1
+        }
+        
+        if(!Sound2 & E:pos():distance(TV) < 200) {
+            O:soundPlay( 1, 0, "weapons/explode" + toString(randint(3, 5)) + ".wav" )
+            #soundVolume(1,3)
+            Sound2 = 1
+        }
+        
+        #print(toString(-1900 - E:vel():z()))
+        if(!E:isAlive() & floor((-1900 - E:vel():z())/750) == 0) {
+            selfDestructAll()
+        }
+    }
+    #print(Mode)
+}

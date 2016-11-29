@@ -1,0 +1,7 @@
+@name Hud Controller
+@inputs Active
+@outputs Hide Pos:vector2
+
+# Hide = !Active
+Hide = 0
+Pos = vec2( 20, 200 )

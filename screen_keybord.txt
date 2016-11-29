@@ -1,0 +1,60 @@
+@name Screen Keybord
+@inputs Key InUse User:entity Screen:wirelink
+@persist Text:array G:gtable
+@persist Row Show
+
+if( first() | duped() ) {
+    runOnTick(1)
+    G = gTable( "Sign" )
+    Text = G["Text", array]
+    Text = Text:count() > 0 ? Text : array()
+    Row = 0
+}
+
+if( InUse ) {
+    if( ~InUse ) {
+        Screen["Reset", number] = 0
+        Text = G["Text", array]
+    }
+    
+    KeyPressed = Key & ~Key
+    
+    if( KeyPressed ) {
+        if( Key == 17 ) { Row = max( Row - 1, 0 ) }
+        if( Key == 18 | Key == 13 ) { Row = min( Row + 1, 17 ) }
+        
+        if( Key == 8 | Key == 127 ) {
+            S = Text[Row, string]
+            if( S:length() == 0 & Row != 0 ) {
+                for( I = Row, 16 ) { Text[Row, string] = Text[Row + 1, string] }
+            } else { Text[Row, string] = S:left( S:length() - 1 ) }
+        }
+        
+        if( Key >= 128 & Key <= 137 ) {
+            Key -= 80
+        }
+        
+        if( Key == 138 ) { Key = 47 }
+        if( Key == 139 ) { Key = 42 }
+        if( Key == 140 ) { Key = 45 }
+        if( Key == 141 ) { Key = 43 }
+        if( Key == 143 ) { Key = 46 }
+        
+        if( Key >= 32 & Key < 127 ) {
+            Text[Row, string] = Text[Row, string] + toChar( Key )
+        }
+    }
+    
+    for( I = 0, 17 ) {
+        Line = Text[I, string] + ( I == Row & Show ? "|" : "" )
+        Line += " ":repeat( 30 - Line:length() )
+        Screen:writeString( Line, 0, I )
+    }
+    
+    Show = !Show
+} elseif( ~InUse ) {
+    Screen["Reset", number] = 1
+    G["Text", array] = Text
+    signalSetGroup( "Sign" )
+    signalSend( "Update", 0 )
+}

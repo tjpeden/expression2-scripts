@@ -1,0 +1,17 @@
+@name Platform Marker
+@persist Factory:gtable Platform:entity
+
+runOnTick(1)
+
+if( first() ) {
+    Factory = gTable( "Factory" )
+    Platform = entity():isWeldedTo()
+    Platform:setMass( 1000 )
+    
+#    A = Platform:getConstraints()
+#    for( I = 0, A:count() ) {
+#        A[I, entity]:setMass( 1000 )
+#    }
+}
+
+Factory["Platform", vector] = Platform:pos()

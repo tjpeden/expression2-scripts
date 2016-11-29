@@ -1,0 +1,34 @@
+@name Warp Controller
+@inputs Drive:wirelink
+@model models/Cerus/Modbridge/Misc/Accessories/acc_radar1.mdl
+
+if( first() ) {
+    dsSend("Bind.Use", "DSS.Events", 2, 1)
+    dsSend("Bind.Attack2", "DSS.Events", 2, 1)
+    runOnTick(1)
+    runOnLast(1)
+}
+
+if( removing() ) { selfDestructAll() }
+
+Drive["UnConstrained", number] = 1
+
+if( dsClk("Use.Triggered") ) {
+    T = dsGetTable()
+    if( T["weapon_type", string] == "weapon_crowbar" ) {
+        Drive["Destination", vector] = T["aim_pos", vector]
+    }
+}
+
+if( tickClk() ) {
+    runOnTick(0)
+    Drive["Warp", number] = 0
+}
+
+if( dsClk("Attack2.Triggered") ) {
+    T = dsGetTable()
+    if( T["weapon_type", string] == "weapon_crowbar" ) {
+        runOnTick(1)
+        Drive["Warp", number] = 1
+    }
+}

@@ -1,0 +1,11 @@
+@name Door Bell
+@inputs Sound
+@persist Owner:entity
+
+if( first() ) {
+    Owner = owner()
+}
+
+if( Sound & ~Sound ) {
+    Owner:soundPlay( 0, 0, "ambient/misc/brass_bell_c.wav" )
+}

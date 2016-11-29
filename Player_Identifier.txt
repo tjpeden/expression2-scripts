@@ -1,0 +1,66 @@
+@name Player Identifier
+@inputs EGP:wirelink
+@outputs 
+@persist Scheduler:table NextEGID EIDtoEGID:table EIDtoHealthEGID:table Entities:table
+@trigger 
+
+if(first()|duped()) {
+    #include "lib/coroutine"
+    #include "lib/arraytable"
+    #include "lib/obfuscate"
+    
+    runOnTick(1)
+    EGP:egpClear()
+    
+    NextEGID=1
+    
+    function void piIterPlayers(Ents:table) {
+        local Player=Ents[1, entity]
+        local EGID=EIDtoEGID[Player:id(), number]
+        local HEGID=EIDtoHealthEGID[Player:id(), number]
+        if(EGID) {
+            EGP:egp3DTracker(EGID, Player:pos()+vec(0, 0, Player:height()))
+            EGP:egpSetText(HEGID, Player:health():toString())
+        } else {
+            EGP:egp3DTracker(NextEGID, Player:pos()+vec(0, 0, Player:height()))
+            EIDtoEGID[Player:id(), number]=NextEGID
+            #print("Assigned "+NextEGID:toString()+" to "+Player:name())
+            NextEGID+=1
+            EGP:egpText(NextEGID, Player:name(), vec2(0, -30))
+            EGP:egpParent(NextEGID, NextEGID-1)
+            Color=vec(255, 255, 0)
+            if(Player==owner()) {
+                Color=vec(127, 0, 255)
+            } elseif(Player:isSuperAdmin()) {
+                Color=vec(255, 0, 0)
+            } elseif(Player:isAdmin()) {
+                Color=vec(255, 127, 0)
+            } elseif(Player:isSteamFriend(owner())) {
+                Color=vec(0, 255, 255)
+            }
+            EGP:egpColor(NextEGID, Color)
+            NextEGID+=1
+            EGP:egpText(NextEGID, Player:toString():matchFirst("[[][0-9]+[]][[](.*)[]]"), vec2(0, -15))
+            EGP:egpParent(NextEGID, NextEGID-2)
+            EGP:egpColor(NextEGID, vec(0, 0, 255))
+            NextEGID+=1
+            EGP:egpText(NextEGID, Player:health():toString(), vec2(0, 0))
+            EGP:egpParent(NextEGID, NextEGID-3)
+            EGP:egpColor(NextEGID, vec(255, 0, 0))
+            EIDtoHealthEGID[Player:id(), number]=NextEGID
+            NextEGID+=1
+        }
+    }
+    
+    function void piUpdatePlayers(Iterator:table) {
+        local Array=newATFrom(players(), noentity())
+        Scheduler:coSchedSleep(newIterator("piIterPlayers", Array, "piUpdatePlayers"))
+    }
+    
+    Scheduler=newScheduler()
+    piUpdatePlayers(Scheduler[1, table])
+}
+
+if(tickClk()) {
+    Scheduler:coRun(25)
+}

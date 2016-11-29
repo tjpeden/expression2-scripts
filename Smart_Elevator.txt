@@ -1,0 +1,34 @@
+@name Smart Elevator
+@inputs 
+@outputs 
+@persist Base:entity Angles:angle
+@trigger 
+
+if( first() ) {
+    
+    
+    function number entity:altitude() {
+        rangerFlags("WEZ")
+        rangerFilter(This)
+        local RDF = rangerOffset(99999, This:pos() + This:right() * -48, -This:up())
+        local RDB = rangerOffset(99999, This:pos() + This:right() * 48,  -This:up())
+        return min(RDF:distance(), RDB:distance())
+    }
+    
+    function void entity:upRight(Target:angle) {
+        local Pos = This:pos()
+    
+        local TarQ = quat(Target)
+        local CurQ = quat(This)
+        
+        local Q = TarQ/CurQ
+        local V = This:toLocal( rotationVector( Q ) + Pos )
+        This:applyTorque( ( 150 * V - 12 * This:angVelVector() ) * This:inertia() )
+    }
+    
+    function void entity:hover(ThrustFactor, DriftFactor, Lift) {
+        local Direction = (This:right() * ThrustFactor - This:vel()):setZ(0) * DriftFactor
+        This:applyForce( Direction + vec(0,0,Lift) )
+    }
+}
+

@@ -1,0 +1,17 @@
+@name Light Controller
+@outputs Light:vector Power
+@persist O:entity
+@persist U Power
+
+if( first() ) {
+    runOnTick(1)
+    O = owner()
+}
+
+W = O:weapon():type() == "weapon_physgun"
+L = U
+U = O:keyUse()
+
+if( W & U & U != L ) { Power = !Power }
+
+Light = vec( 0, 127, 255 ) * Power

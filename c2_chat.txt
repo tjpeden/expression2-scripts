@@ -1,0 +1,53 @@
+@name C2 Chat
+@inputs Key User:entity Screen:wirelink
+@persist Console:table Input:string
+@model models/props/pc_case02/pc_case02.mdl
+
+if( first() ) {
+    dsJoinGroup( "C2 Chat" )
+    dsJoinGroup( "OOP" )
+    
+    Input = ""
+}
+
+if( first() | dsClk( "Console" ) ) {
+    ConsoleClass = gTable( "Console", 1 )
+    Console = ConsoleClass["Console.new", function](Screen)[table]
+    
+    timer( "Prompt", 100 )
+}
+
+if( clk( "Prompt" ) ) {
+    Console["printBuffer", function](Console, Input)
+}
+
+if( dsClk( "Message" ) ) { Console["printColor", function](Console, dsGetString(), 90) }
+
+if( Key & ~Key ) {
+    # Enter causes input buffer to get sent
+    if( Key == 13 & Input:length() > 0 ) {
+        Console["printColor", function](Console, Input, 9)
+        
+        if( User ) { Input = User:name() + ": " + Input }
+        dsSend( "Message", "C2 Chat", Input )
+        
+        Input = ""
+    }
+    
+    # Backspace
+    if( Key == 127 ) { Input = Input:left( Input:length() - 1 ) }
+    
+    if( Key == 138 ) { Key = 47 }
+    if( Key == 139 ) { Key = 42 }
+    if( Key == 140 ) { Key = 45 }
+    if( Key == 141 ) { Key = 43 }
+    if( Key == 143 ) { Key = 46 }
+    
+    # Numpad numbers
+    if( inrange( Key, 128, 137 ) ) { Key -= 80 }
+    
+    # Add printable characters to input buffer
+    if( inrange( Key, 32, 126 ) ) { Input += toChar( Key ) }
+    
+    Console["printBuffer", function](Console, Input)
+}

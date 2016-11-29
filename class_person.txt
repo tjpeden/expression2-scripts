@@ -1,0 +1,34 @@
+@name Class Person
+@persist Inc:function
+
+# Move to LibCommon, also add dec
+function Inc(Object:table, Member:string) {
+    Object[Member, number] = Object[Member, number] + 1
+}
+
+Class = gTable( "Person", 1 )
+Class:clear()
+
+Class["NewPerson", function] = function(Name:string, Age) {
+    Person = table()
+    Person["_name", string] = Name
+    Person["_age", number] = Age
+    
+    Person["GetName", function] = function(Self:table) {
+        return Self["_name", string]
+    }
+    
+    Person["GetAge", function] = function(Self:table) {
+        return Self["_age", number]
+    }
+    
+    Person["Birthday", function] = function(Self:table) {
+        Inc(Self, "_age")
+    }
+    
+    return Person
+}
+
+Class["PrintPerson", function] = function(Person:table) {
+    print( Person["GetName", function](Person)[string] + " is " + Person["GetAge", function](Person)[number] + " years old!" )
+}

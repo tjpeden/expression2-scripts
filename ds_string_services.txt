@@ -1,0 +1,87 @@
+@name DS String Services
+@inputs 
+@outputs 
+@persist 
+@trigger 
+@model models/props_lab/harddrive02.mdl
+
+if(first()|duped()) {
+    dsJoinGroup("DSS.Str")
+    dsSetScope(2)
+}
+
+if(dsClk()&(maxquota()<250)) {
+    dsSendDirect("Error.TickQuota", dsGetSender(), 0)
+}
+
+if(dsClk("Pad")) {
+    Tbl=dsGetTable()
+    String=Tbl["String", string]
+    Length=Tbl["Length", number]
+    Fill=Tbl["Fill", string]
+    if(!Fill) {
+        Fill=" "
+    }
+    dsSendDirect("Result.Pad", dsGetSender(), String+Fill:repeat(max(0, Length-String:length())))
+}
+
+if(dsClk("Wrap")) {
+    #"Crammed" wrapping: no whitespace breaks, each line
+    #contains as many characters as possible
+    Tbl=dsGetTable()
+    String=Tbl["String", string]
+    Length=Tbl["Length", number]
+    Res=array()
+    if(!String) {
+        dsSendDirect("Result.Wrap", dsGetSender(), Res)
+        exit()
+    }
+    Lines=int(String:length()/Length)+1
+    for(I=1,Lines) {
+        Ln=String:sub(1+((I-1)*Length), I*Length)
+        Ln=Ln+" ":repeat(Length-Ln:length())
+        Res:pushString(Ln)
+    }
+    dsSendDirect("Result.Wrap", dsGetSender(), Res)
+}    
+
+if(dsClk("WSCollapse")) {
+    #Collapse multiple runs of whitespace (" " and "\n")
+    String=dsGetString()
+    Split=String:explode(" ")
+    Ret=""
+    for(I=1,Split:count()) {
+        if(Split[I, string]) {
+            Ret+=Split[I, string]
+        }
+    }
+    Split=Ret:explode("\n")
+    Ret=""
+    for(I=1,Split:count()) {
+        if(Split[I, string]) {
+            Ret+=Split[I, string]
+        }
+    }
+    dsSendDirect("Result.WSCollapse", dsGetSender(), Res)
+}
+
+if(dsClk("WrapWS")) {
+    #Perform whitespace-based wrapping
+    Tbl=dsGetTable()
+    String=Tbl["String", string]
+    Length=Tbl["Length", number]
+    Split=String:explode(" ")
+    Res=array()
+    Buf=""
+    for(I=1, Split:count()) {
+        Str=Split[I, string]
+        if(Buf:length()+Str:length()>Length) {
+            Res:pushString(Buf)
+            Buf=Str+" "
+        } else {
+            Buf=Buf+Str+" "
+        }
+    }
+    Res:pushString(Buf)
+    dsSendDirect("Result.WrapWS", dsGetSender(), Res)
+}

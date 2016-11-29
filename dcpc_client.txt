@@ -1,0 +1,350 @@
+@name DCPC Client
+@inputs LocalKbd LocalCns:wirelink
+@outputs Server:entity
+@persist MainKeyboard:table MainConsole:table MainShell:table
+@persist C_BLACK C_RED C_GREEN C_BLUE C_YELLOW C_MAGENTA C_CYAN C_WHITE
+@persist CR_WIDTH CR_HEIGHT CR_SHIFT CR_CURSOR CR_CURADDR CR_CLEAR
+@trigger 
+
+if(first()|duped()) {
+    C_BLACK=0
+    C_RED=900
+    C_GREEN=90
+    C_BLUE=9
+    C_YELLOW=990
+    C_MAGENTA=909
+    C_CYAN=99
+    C_WHITE=999
+    CR_WIDTH=2032
+    CR_HEIGHT=2034
+    CR_SHIFT=2038
+    CR_CURSOR=2046
+    CR_CURADDR=2045
+    CR_CLEAR=2041
+    function table newAttribs(FG, BG, Flash) {
+        local RetT=table()
+        RetT["FG", number]=FG
+        RetT["BG", number]=BG
+        RetT["Flash", number]=Flash
+        return RetT
+    }
+    function table newAttribs(FG, BG) {
+        return newAttribs(FG, BG, 0)
+    }
+    function table newAttribs(FG) {
+        return newAttribs(FG, C_BLACK)
+    }
+    function table newAttribs() {
+        return newAttribs(C_WHITE)
+    }
+    function number table:atFG() {
+        return This["FG", number]
+    }
+    function number table:atBG() {
+        return This["BG", number]
+    }
+    function number table:atFlash() {
+        return This["Flash", number]
+    }
+    function void table:atSetFG(FG) {
+        This["FG", number]=FG
+    }
+    function void table:atSetBG(BG) {
+        This["BG", number]=BG
+    }
+    function void table:atSetFlash(Flash) {
+        This["Flash", number]=Flash
+    }
+    function vector table:atToColorVec() {
+        local FG=This:atFG()
+        local R=(FG/100)%10
+        local G=(FG/10)%10
+        local B=FG%10
+        return vec(R*(255/9), G*(255/9), B*(255/9))
+    }
+    function table newConsole(Cns:wirelink) {
+        local RetT=table()
+        RetT["Cns", wirelink]=Cns
+        RetT["CursorPos", vector2]=vec2(0, 0)
+        RetT["MaxLine", number]=-1
+        return RetT
+    }
+    function wirelink table:cnConsole() {
+        return This["Cns", wirelink]
+    }
+    function number table:cnWidth() {
+        local Cns=This:cnConsole()
+        return Cns[CR_WIDTH]
+    }
+    function number table:cnHeight() {
+        local Cns=This:cnConsole()
+        return Cns[CR_HEIGHT]
+    }
+    function vector2 table:cnCursorPos() {
+        return This["CursorPos", vector2]
+    }
+    function number table:cnIntCursorPos() {
+        local Pos=This:cnCursorPos()
+        return This:cnWidth()*(Pos:y()*This:cnWidth()+Pos:x())
+    }
+    function void table:cnSetCursorPos(Pos:vector2) {
+        local Cns=This:cnConsole()
+        This["CursorPos", vector2]=Pos
+        Cns[CR_CURADDR]=This:cnIntCursorPos()
+    }
+    function number table:cnMaxLine() {
+        return This["MaxLine", number]
+    }
+    function void table:cnSetMaxLine(MaxLine) {
+        This["MaxLine", number]=MaxLine
+    }
+    function void table:cnShift(Amount) {
+        local Cns=This:cnConsole()
+        local CurPos=This:cnCursorPos()
+        Cns[CR_SHIFT]=Amount
+        This:cnSetCursorPos(vec2(CurPos:x(), CurPos:y()-Amount))
+    }
+    function void table:cnCursorEnable(Enable) {
+        local Cns=This:cnConsole()
+        Cns[CR_CURSOR]=Enable
+    }
+    function vector2 table:cnNewLine() {
+        local CurPos=This:cnCursorPos()
+        local MaxLine=This:cnMaxLine()
+        if(CurPos:y()>=MaxLine) {
+            This:cnShift(CurPos:y()-MaxLine+1)
+            This:cnSetCursorPos(vec2(0, MaxLine))
+        } else {
+            This:cnSetCursorPos(vec2(0, CurPos:y()+1))
+        }
+        return This:cnCursorPos()
+    }
+    function void table:cnWriteLines(Str:string, Attribs:table) {
+        local Width=This:cnWidth()
+        local Height=This:cnHeight()
+        local CurPos=This:cnCursorPos()
+        local Cns=This:cnConsole()
+        local MaxLine=This:cnMaxLine()
+        printColor(Attribs:atToColorVec(), Str)
+        #print("Writing \""+Str+"\" to console using "+Attribs:toString()+" at "+CurPos:toString())
+        while(Str!="") {
+            #print("Printing \""+Str+"\"...")
+            Cns:writeString(Str:left(Width-CurPos:x()), CurPos:x(), CurPos:y(), Attribs:atFG(), Attribs:atBG(), Attribs:atFlash())
+            Str=Str:sub(Width-CurPos:x()+1)
+            #print("\""+Str+"\" remains...")
+            CurPos=This:cnNewLine()
+        }
+    }
+    function void table:cnClear() {
+        local Cns=This:cnConsole()
+        Cns[CR_CLEAR]=1
+        This:cnSetCursorPos(vec2(0, 0))
+    }
+    function table newKeyboard() {
+        local RetT=table()
+        RetT["Buffer", string]=""
+        RetT["History", table]=table()
+        RetT["HistoryIdx", number]=0
+        RetT["HistoryLen", number]=32
+        RetT["Handler", entity]=entity()
+        RetT["Signal", string]="DCPC.Keyboard"
+        return RetT
+    }
+    function string table:kbBuffer() {
+        return This["Buffer", string]
+    }
+    function void table:kbSetBuffer(Str:string) {
+        This["Buffer", string]=Str
+    }
+    function table table:kbHistory() {
+        return This["History", table]
+    }
+    function void table:kbNavHistory(N) {
+        This["HistoryIdx", number] = min(max(0, This["HistoryIdx", number]+N), This:kbHistory():count())
+    }
+    function void table:kbBufferFromHistory() {
+        local Idx = This["HistoryIdx", number]
+        This:kbSetBuffer(This:kbHistory()[Idx, string])
+    }
+    function entity table:kbHandler() {
+        return This["Handler", entity]
+    }
+    function void table:kbSetHandler(Handler:entity) {
+        This["Handler", entity]=Handler
+    }
+    function string table:kbSignal() {
+        return This["Signal", string]
+    }
+    function void table:kbSetSignal(Signal:string) {
+        This["Signal", string]=Signal
+    }
+    function void table:kbBufferAdd(Str:string) {
+        This:kbSetBuffer(This:kbBuffer()+Str)
+    }
+    function void table:kbBufferChop(Amount) {
+        This:kbSetBuffer(This:kbBuffer():left(This:kbBuffer():length()-Amount))
+    }
+    function string table:kbBufferAndDelete() {
+        local RetS=This:kbBuffer()
+        local Hist=This:kbHistory()
+        Hist:unshiftString(RetS)
+        if(Hist:count()>This["HistoryLen", number]) { Hist:pop() }
+        This["HistoryIdx", number] = 0
+        This:kbSetBuffer("")
+        return RetS
+    }
+    function void table:kbTakeKey(Keynum) {
+        if(Keynum==8|Keynum==127) { #Backspace
+            This:kbBufferChop(1)
+        } elseif(Keynum==10|Keynum==13) {
+            dsSendDirect(This:kbSignal(), This:kbHandler(), This:kbBufferAndDelete())
+        } elseif(Keynum==17) {
+            This:kbNavHistory(1)
+            This:kbBufferFromHistory()
+        } elseif(Keynum==18) {
+            This:kbNavHistory(-1)
+            This:kbBufferFromHistory()
+        } elseif(Keynum>=128&Keynum<=137) {
+            Keynum -= 80
+        } elseif(Keynum==138) { Keynum=47 }
+          elseif(Keynum==139) { Keynum=42 }
+          elseif(Keynum==140) { Keynum=45 }
+          elseif(Keynum==141) { Keynum=43 }
+          elseif(Keynum==143) { Keynum=46 }
+        if(Keynum>=32&Keynum<127) {
+            This:kbBufferAdd(toChar(Keynum))
+        }
+    }
+    function table newShell(Console:table, Keyboard:table) {
+        local RetT=table()
+        RetT["Console", table]=Console
+        RetT["Keyboard", table]=Keyboard
+        RetT["Remote", entity]=entity()
+        RetT["Signal", string]="DCPC.Shell"
+        return RetT
+    }
+    function table table:shConsole() {
+        return This["Console", table]
+    }
+    function table table:shKeyboard() {
+        return This["Keyboard", table]
+    }
+    function entity table:shRemote() {
+        return This["Remote", entity]
+    }
+    function void table:shSetRemote(Remote:entity) {
+        This["Remote", entity]=Remote
+    }
+    function string table:shSignal() {
+        return This["Signal", string]
+    }
+    function void table:shSetSignal(Signal:string) {
+        This["Signal", string]=Signal
+    }
+    function void table:shRunSpecial(Command:string) {
+        local Console=This:shConsole()
+        Parts=Command:explode(" ")
+        local Cmd=Parts[1, string]
+        if(Cmd=="listgrp") {
+            local Arr=dsProbe(Parts[2, string])
+            if(Arr:count()==0) {
+                Console:cnWriteLines("No chips in this group.", newAttribs(C_RED))
+            }
+            for(I=1,Arr:count()) {
+                local Ent=Arr[I, entity]
+                Console:cnWriteLines(Ent:id():toString()+":"+Ent:toString(), newAttribs(C_RED))
+            }
+        } elseif(Cmd=="connect") {
+            local ID=Parts[2, string]:toNumber()
+            local Ent=entity(ID)
+            This:shSetRemote(Ent)
+            dsSendDirect("DCPC.Connect", Ent, entity())
+            Console:cnWriteLines("Connected.", newAttribs(C_GREEN))
+        } elseif(Cmd=="disconnect") {
+            dsSendDirect("DCPC.Disconnect", This:shRemote(), entity())
+            This:shSetRemote(entity())
+            Console:cnWriteLines("Disconnected.", newAttribs(C_GREEN))
+        } elseif(Cmd=="cls") {
+            Console:cnClear()
+        } else {
+            print("Unidentified command:"+Cmd)
+            Console:cnWriteLines("Command not understood.", newAttribs(C_RED))
+        }
+    }
+    function void table:shRun(Command:string, Invocation:table) {
+        if(Command:left(1)=="!") {
+            This:shRunSpecial(Command:sub(2))
+        } else {
+            Invocation["Command", string]=Command
+            dsSendDirect(This:shSignal(), This:shRemote(), Invocation)
+        }
+    }
+    MainKeyboard=newKeyboard()
+    MainConsole=newConsole(LocalCns)
+    MainConsole:cnSetMaxLine(MainConsole:cnHeight()-1)
+    MainShell=newShell(MainConsole, MainKeyboard)
+    runOnChat(1)
+}
+
+if(LocalKbd&~LocalKbd) {
+    #print("Key intercept: "+LocalKbd:toString())
+    MainKeyboard:kbTakeKey(LocalKbd)
+    #print("Current Buffer: "+MainKeyboard:kbBuffer())
+    MainConsole:cnConsole():writeString(" ":repeat(MainConsole:cnWidth()), 0, MainConsole:cnHeight(), C_WHITE, C_BLUE)
+    MainConsole:cnConsole():writeString(MainKeyboard:kbBuffer():right(MainConsole:cnWidth()), 0, MainConsole:cnHeight(), C_CYAN, C_BLUE)
+}
+
+if(dsClk("DCPC.Keyboard")|dsClk("DCPC.Chat")) {
+    T=table()
+    if(dsClk("DCPC.Keyboard")) {
+        Cmd=dsGetString()
+        T["Invocation", string]="Console"
+    } else {
+        Cmd=dsGetTable()["Cmd", string]
+        T["Invocation", string]="Chat"
+        T["Invoker", entity]=dsGetTable()["Invoker", entity]
+    }
+    MainConsole:cnConsole():writeString(" ":repeat(MainConsole:cnWidth()), 0, MainConsole:cnHeight())
+    Attribs=newAttribs()
+    Attribs:atSetFG(C_CYAN)
+    if(MainShell:shRemote()==entity()) {
+        Srv="SELF"
+    } else {
+        Srv=MainShell:shRemote():id():toString()
+    }
+    MainConsole:cnWriteLines(Srv+"$"+Cmd, Attribs)
+    MainShell:shRun(Cmd, T)
+}
+
+if(chatClk()) {
+    if(lastSaid():left(1)=="$") {
+        Params=table()
+        Params["Cmd", string]=lastSaid():sub(2)
+        Params["Invoker", entity]=lastSpoke()
+        dsSendDirect("DCPC.Chat", entity(), Params)
+        if(chatClk(owner())) {
+            hideChat(1)
+        }
+    }
+}
+
+if(dsClk("DCPC.WriteLines")) {
+    Params=dsGetTable()
+    Str=Params["Str", string]
+    Attribs=Params["Attribs", table]
+    MainConsole:cnWriteLines(Str, Attribs)
+}
+
+if(dsClk("DCPC.Clear")) {
+    MainConsole:cnClear()
+}
+
+if(dsClk("DCPC.SetCursorPos")) {
+    MainConsole:cnSetCursorPos(dsGetVector2())
+}
+
+if(dsClk("DCPC.Shell")) {
+    Cmd=dsGetTable()["Command", string]
+    #print("Running shell line: "+Cmd)
+    MainShell:shRunSpecial(Cmd)
+}

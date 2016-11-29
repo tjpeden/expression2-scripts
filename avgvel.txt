@@ -1,0 +1,21 @@
+@name Average Velocity
+@inputs On
+@outputs Avg Max
+@persist Data:array E:entity
+@trigger all
+
+if( first() ) {
+    runOnTick( 1 )
+    E = entity():isConstrainedTo()
+}
+
+if( On ) {
+    Vel = E:vel():length()
+    
+    if( Vel != 0 ) {
+        Data:pushNumber( Vel )
+    }
+    
+    Avg = Data:average()
+    Max = Data:max()
+}

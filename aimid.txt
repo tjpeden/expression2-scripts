@@ -1,0 +1,19 @@
+@name What's What
+@inputs 
+@outputs ID
+@persist 
+@trigger all
+
+Yes=1
+
+if( first() ) {
+    runOnTick(Yes)
+}
+
+E = owner():aimEntity()
+
+if( E ) {
+    ID = E:id()
+} else {
+    ID = -1
+}

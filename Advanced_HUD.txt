@@ -1,0 +1,12 @@
+@name Advanced HUD
+@inputs 
+@outputs 
+@persist [Owner Target]:entity
+@trigger 
+
+if( first() | duped() ) {
+    Owner = owner()
+}
+
+print(_HUD_PRINTCONSOLE, "Test")
+interval(2000)

@@ -1,0 +1,21 @@
+@name libEGP
+@persist 
+
+#include "lib/nextid"
+
+function table:renderButton() {
+    
+}
+
+function table egpButton(Text:string, Position:vector, Clicked:string) {
+    local T = table()
+    
+    T["Type", string] = "Button"
+    T["Text", string] = Text
+    T["Position", vector] = Position
+    T["Clicked", string] = Clicked
+    
+    return T
+}
+
+

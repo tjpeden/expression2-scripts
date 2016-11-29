@@ -1,0 +1,104 @@
+@name Racer HUD
+@inputs LocalEGP:wirelink
+@persist Racer:table Items:table
+
+interval(100)
+#if(first() | dupefinished()) { runOnTick(1) }
+if(!->LocalEGP) { exit() }
+
+if(!Racer) {
+    function number table:nextID() {
+        local ID = This["NextID", number]
+        This["NextID", number] = ID + 1
+        return ID
+    }
+    
+    function void table:itmUpdate() {
+        local App = This["App", table]
+        local Base = App["Base", entity]
+        local ID = This["ValueID", number]
+        App["EGP", wirelink]:egpSetText(ID, Base[This["Key", string], number]:toString())
+    }
+    
+    #[  Window Constructor  ]#
+    function void newWindow(App:table, Title:string) {
+        local TitleID = App:nextID()
+        App["EGP", wirelink]:egpText(TitleID, Title, vec2(256,0))
+        App["EGP", wirelink]:egpColor(TitleID, vec(0, 0, 255))
+        App["EGP", wirelink]:egpAlign(TitleID, 1)
+        App["EGP", wirelink]:egpSize(TitleID, 30)
+    }
+    
+    #[  Cursor Constructor  ]#
+    function void newCursor(App:table) {
+        local CursorID = App:nextID()
+        App["EGP", wirelink]:egpCircle(CursorID, vec2(0,0), vec2(2,2))
+        App["EGP", wirelink]:egpColor(CursorID, vec(255, 0, 0))
+        App["EGP", wirelink]:egpParentToCursor(CursorID)
+    }
+    
+    #[  App Constructor   ]#
+    function table newApp(EGP:wirelink, Title:string, Cursor) {
+        local App = table()
+        
+        App["NextID", number] = 1
+        App["EGP", wirelink]  = EGP
+        App["Base", entity] = entity():isWeldedTo()
+        
+        EGP:egpClear()
+        EGP:egpDrawTopLeft(1)
+        
+        newWindow(App, Title)
+        if(Cursor) { newCursor(App) }
+        
+        return App
+    }
+    
+    function table newItem(App:table, Key:string, Pos:vector2) {
+        local Item = table()
+        local Label = Key + ":"
+        local Len = Label:length() + 1
+        
+        local LabelID = App:nextID()
+        App["EGP", wirelink]:egpText(LabelID, Label, Pos)
+        App["EGP", wirelink]:egpFont(LabelID, "Courier New", 30)
+        App["EGP", wirelink]:egpColor(LabelID, vec(255,0,0))
+        
+        local ValueID = App:nextID()
+        App["EGP", wirelink]:egpText(ValueID, "*", Pos + vec2(Len * 5, 0))
+        App["EGP", wirelink]:egpFont(ValueID, "Courier New", 30)
+        App["EGP", wirelink]:egpColor(ValueID, vec(128,0,0))
+        
+        Item["App", table] = App
+        Item["Key", string] = Key
+        Item["LabelID", number] = LabelID
+        Item["ValueID", number] = ValueID
+        
+        return Item
+    }
+    
+    entity():setColor(vec(0,0,128), 192)
+    LocalEGP:entity():setColor(vec(30,25,25), 255)
+    
+    if(LocalEGP:hasInput("0 to 512")) { LocalEGP["0 to 512", number] = 512 }
+    
+    Racer = newApp(LocalEGP, "Racer HUD", 0)
+    
+    function void addItem(Key:string) {
+        local N = Items:count() + 1
+        local Y = N * 32
+        Items[Key, table] = newItem(Racer, Key, vec2(0, Y))
+    }
+    
+    addItem("Speed")
+    addItem("MPH")
+}
+
+Base = Racer["Base", entity]
+Speed = round( vec2( Base:velL() ):length() )
+Base["Speed", number] = Speed
+Base["MPH", number] = round( toUnit("mph", Speed) )
+
+foreach(Key, Item:table = Items) {
+    Item:itmUpdate()
+}

@@ -1,0 +1,21 @@
+@name Platform Spawner
+@inputs Prop:wirelink
+
+interval( 100 )
+
+Group = "Factory"
+Step = "base"
+
+if( first() ) {
+    dsJoinGroup( Group )
+    dsSetScope( 0 )
+}
+
+if( dsClk( "create" ) ) {
+    What = dsGetString()
+    
+    if( What == Step ) {
+        Prop["Spawn", number] = 1
+        dsSend( "dock", Group, 1 )
+    }
+} else { Prop["Spawn", number] = 0 }

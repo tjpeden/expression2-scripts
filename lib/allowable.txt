@@ -1,0 +1,27 @@
+@name libAllowable 
+
+findClearBlackList()
+findClearWhiteList()
+
+function table newAllowable() {
+    local Result = table()
+    
+    Result["allowed", table] = table()
+    
+    return Result
+}
+
+function normal table:aIsAllowed(Player:entity) {
+    return This["allowed", table][Player:steamID(), normal]
+}
+
+function table:aSetAllowed(Player:entity, Allowed) {
+    This["allowed", table][Player:steamID(), normal] = Allowed
+}
+
+function entity closestPlayerWithin(Position:vector, Distance) {
+    findIncludeClass("player")
+    findInSphere(Position, Distance)
+    findSortByDistance(Position)
+    return find()
+}

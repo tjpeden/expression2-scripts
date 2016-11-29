@@ -1,0 +1,66 @@
+@name Safe Money Printer v3
+@inputs Printer:entity Override
+@outputs Grab
+@persist Env:table UseInterval
+@trigger Active Override
+
+if( first() | duped() ) {
+    #include "lib/command"
+    #include "lib/utils"
+    
+    runOnChat(1)
+    setName(hash():toString())
+    
+    MinLength = 10
+    MaxLength = 80
+    UseInterval = 8 * 1000
+    
+    function smpUse() {
+        Printer:isSteamFriends()
+        timer("smpStartUse", UseInterval)
+    }
+    
+    function smpStart(Args:table, Ret:table) {
+        Active = 1
+        Grab = 1
+        smpUse()
+    }
+    
+    function smpStop(Args:table, Ret:table) {
+        Active = 0
+        Grab = 0
+        stoptimer("smpStartUse")
+    }
+    
+    function smpCheck(Args:table, Ret:table) {
+        if( Printer ) {
+            print( Printer:toString() )
+        } else {
+            printColor(vec(255, 0, 0), "No money printer found.")
+        }
+    }
+    
+    Env = newEnv(":")
+    Env:pushTable(newCommand("on", "smpStart", ""))
+    Env:pushTable(newCommand("off", "smpStop", ""))
+    Env:pushTable(newCommand("check", "smpCheck", ""))
+}
+
+if( changed(Override) & !first() ) { Grab = Active & !Override }
+
+if( !->Grab ) {
+    interval(250)
+    local Inputs = table()
+    local Outputs = table()
+    Inputs:addIO("Printer", "Grabbed Entity")
+    Outputs:addIO("Grab")
+    findAndWire("gmod_wire_grabber", Inputs, Outputs)
+}
+
+if( clk("smpStartUse") ) { smpUse() }
+
+if( chatClk( owner() ) ) {
+    if( Env:envExec( lastSaid() ) ) {
+        hideChat(1)
+    }
+}

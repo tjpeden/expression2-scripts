@@ -1,0 +1,33 @@
+@name Advanced Targeting Receiver
+@inputs Gun:wirelink
+@outputs InAir
+@persist Launched
+
+Yes = 1, No = !Yes
+
+signalSetGroup( "AdvTargetChip" )
+
+if( first() ) {
+    runOnTick( 1 )
+    runOnSignal( "UpdateTarget", 0 )
+}
+
+InAir = Gun:number( "Drones In Air" )
+
+if( InAir > 0 ) {
+    Launched = Yes
+    Gun:setNumber( "Launch", No )
+}
+
+if( signalClk( "AdvTargetChip", "UpdateTarget", 0 ) ) {
+    Gun:setNumber( "X", gGetNum( "X" ) )
+    Gun:setNumber( "Y", gGetNum( "Y" ) )
+    Gun:setNumber( "Z", gGetNum( "Z" ) )
+    Gun:setNumber( "Lock", Yes )
+    Gun:setNumber( "Launch", Yes )
+}
+
+if( Launched & InAir == 0 ) {
+    Gun:setNumber( "Lock", 0 )
+    Launched = No
+}

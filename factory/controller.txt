@@ -1,0 +1,15 @@
+@name Factory Controller 
+@inputs Start
+@persist Group:string
+
+if( first() ) {
+    Group = "Factory"
+    dsJoinGroup( Group )
+    dsSetScope( 0 )
+}
+
+if( Start & ~Start) {
+    E = entity()
+    E:soundPlay( 0, 0, "ambient/machines/steam_release_2.wav" )
+    dsSend( "create", Group, 1 )
+}

@@ -1,0 +1,35 @@
+@name Drone Attack Chair
+@inputs Mouse1 Mouse2 Light Active
+@inputs AimPos:vector Entity:entity
+@inputs Gun:wirelink
+@outputs Crosshairs
+@persist Open Lock
+
+if( first() ) {
+    runOnTick(1)
+    Crosshairs = 1
+}
+
+OpenLast = Open
+ActiveLast = Active
+
+if( ~Light & Light ) {
+    Open = !Open
+}
+if( ~Mouse1 ) {
+    if( Mouse1 & !Open ) {
+        Entity:soundPlay("notify", 0, "buttons/button10.wav")
+    }
+    Gun["Launch", number] = Mouse1
+}
+if( ~Mouse2 & Mouse2 ) {
+    Lock = !Lock
+    Gun["Lock", number] = Lock
+}
+
+Open = Open & Active
+
+if( Open != OpenLast ) { Gun["Open", number] = Open }
+if( Active != ActiveLast ) { Gun["Kill", number] = !Active }
+
+Gun["Vector", vector] = AimPos

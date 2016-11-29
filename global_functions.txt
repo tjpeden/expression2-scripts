@@ -1,0 +1,29 @@
+@name Global Functions
+@persist Use
+@model models/props_lab/servers.mdl
+
+Library = gTable( "OOP", 1 )
+Library:clear()
+
+Library["New", function] = function(Class:table, Args:table) {
+    return Class["new", function](Args)[table]
+}
+
+Library["Call", function] = function(Object:table, Method:string) {
+    return Object[Method, function](Object)
+}
+
+Library["CallEx", function] = function(Object:table, Method:string, Args:table) {
+    return Object[Method, function](Object, Args)
+}
+
+Library = gTable( "PlayerHelpers" )
+Library:clear()
+
+Library["UsingWith", function] = function(Player:entity, Weapon:string) {
+    UseLast = Use
+    Use = Player:keyUse()
+    W = Player:weapon():type() == Weapon
+    
+    return W & Use & !UseLast
+}

@@ -1,0 +1,41 @@
+@name Input Buffer Controller
+@inputs Local:string Remote:string
+@outputs Next:string Send:string ResetIP TargetIP:string TargetPort LocalPort
+@persist Buffer:array TargetIP:string TargetPort LocalPort
+#@trigger all
+
+Yes = 1, No = !Yes
+
+interval( 75 )
+
+if( ResetIP == Yes ) { ResetIP = No }
+
+if( ~Local & Local:length() > 0 ) {
+    if( Local == "!connect" ) {
+        ResetIP = Yes
+    } elseif( Local:sub(0,1) == "!" ) {
+        if( Local:find(":") > 0 ) {
+            Dest = Local:sub(2,Local:length()):explode(":")
+            TargetIP = Dest:string(1)
+            TargetPort = Dest:string(2):toNumber()
+        } else {
+            hint( "Format: !<IP Address>:<Port>", 7 )
+        }
+    } elseif( Local:sub(0,1) == "@" ) {
+        #print( Local:sub(2,Local:length()) )
+        LocalPort = Local:sub(2,Local:length()):toNumber()
+    } else {
+        Send = Local
+        Buffer:pushString( "L: " + Local )
+    }
+}
+
+if( ~Remote & Remote:length() > 0 ) {
+    Buffer:pushString( "R: " + Remote )
+}
+
+if( Buffer:count() > 0 ) {
+    Next = Buffer:shiftString()
+    soundVolume( 0, 100 )
+    soundPlay(0, 0, "Friends/message.wav")
+}

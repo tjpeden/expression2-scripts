@@ -1,0 +1,35 @@
+@name libUtils
+
+function advCreateWire(From:entity, To:entity, IOs:table) {
+    local FNames = IOs:keys()
+    local TNames = IOs:values()
+    
+    for( I = 0, FNames:count() ) {
+        FName = FNames[I, string]
+        TName = TNames[I, string]
+        From:createWire(To, FName, TName)
+    }
+}
+
+function table table:addIO(From:string, To:string) {
+    This[From, string] = To
+    return This
+}
+
+function table table:addIO(IO:string) {
+    return This:addIO(IO, IO)
+}
+
+function findAndWire(Class:string, Inputs:table, Outputs:table) {
+    local Self = entity()
+    findIncludeClass(Class)
+    findInSphere(Self:pos(), 100)
+    local E = find()
+    
+    if( E ) {
+        if( Inputs:count() ) { advCreateWire(Self, E, Inputs) }
+        if( Outputs:count() ) { advCreateWire(E, Self, Outputs) }
+    }
+    
+    exit()
+}

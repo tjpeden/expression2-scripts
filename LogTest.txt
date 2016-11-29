@@ -1,0 +1,64 @@
+@name LogTest
+@inputs Attacker:entity Victim:entity Damage:normal Clk:normal
+@outputs On:normal Entities:array
+@trigger Clk
+if(first()|duped())
+{
+    On = 1
+    Entities = players()
+    timer("update",1000)
+}
+
+if(clk("update"))
+{
+    Entities = players()
+    if(!->Clk)
+    {
+        findIncludeClass("gmod_wire_damage_detector")
+        findInSphere(entity():pos(),100)
+        if(find())
+        {
+            find():createWire(entity(), "On", "On")
+            find():createWire(entity(), "Entities", "Entities")
+            entity():createWire(find(), "Attacker", "Attacker")
+            entity():createWire(find(), "Victim", "Victim")
+            entity():createWire(find(), "Damage", "Damage")
+            entity():createWire(find(), "Clk", "Clk")
+        }
+    }
+    timer("update",1000)
+}
+if(inputClk() && Victim:isPlayer())
+{
+    VNick = Victim:name()
+    
+    if(Attacker:isPlayer())
+    {
+        ANick = Attacker:name()
+    }
+    
+    else
+    {
+        ANick = "The World"
+    }
+    
+    concmd("echo " + VNick + " took " + round(Damage) + " damage from " + ANick)
+    
+    if(Attacker == owner())
+    {
+        Health = Victim:health()
+        HC = (Health/100)*255
+        DC = (Damage/100)*255
+        printColor(vec(),"Damage: ",vec(DC,255-DC,0),(round(Damage)),vec(),", Health Left: ",vec(255-HC,HC,0),Health)
+    }
+    
+    if(Victim:health() <= 0)
+    {
+        #printColor(vec(255,10,10),VNick + " was killed by " + ANick)
+        VC = teamColor(Victim:team())
+        AC = (Attacker:isPlayer() ? teamColor(Attacker:team()) : vec(200,200,200))
+        printColor(VC,VNick,vec(30,200,200)," was killed by ",AC,ANick)
+    }
+    #Reset = 1
+    #timer("reset",10)
+}

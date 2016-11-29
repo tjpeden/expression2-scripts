@@ -1,0 +1,31 @@
+@name Following Lazer
+@outputs Vector:vector Active
+@persist Owner:entity Players:array I
+
+interval( 100 )
+
+if( first() ) {
+    dsJoinGroup( "LazerZ" )
+}
+
+if( dsClk( "Toggle" ) ) { Active = !Active }
+
+if( first() | clk( "update" ) ) {
+    Pos = entity():pos()
+    
+    findByClass( "player" )
+    findClipToSphere( Pos, 1000 )
+    findSortByDistance( Pos )
+    Players = findToArray()
+    
+    I = 1
+}
+
+Found = Players:count()
+
+if( I < Found ) {
+    P = Players[I, entity]
+    V = P:pos()
+    Vector = V:setZ( V:z() + P:height() + 5 )
+    I += 1
+} else { timer( "update", 1 ) }

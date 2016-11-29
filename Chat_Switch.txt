@@ -1,0 +1,45 @@
+@name Chat Switch
+@outputs Clk Reset
+@persist Env:table
+
+if( first() ) {
+    #include "lib/constants"
+    #include "lib/command"
+    
+    runOnChat(1)
+    
+    setName(hash():toString())
+    
+    function on(Args:table, Ret:table) {
+        Clk = 1
+        printColor(Green, "Switch On")
+    }
+    
+    function off(Args:table, Ret:table) {
+        Clk = 0
+        Reset = 1
+        timer("reset", 100)
+        printColor(Red, "Switch Off")
+    }
+    
+    function reset(Args:table, Ret:table) {
+        Reset = 1
+        timer("reset", 100)
+    }
+    
+    Env = table()
+    Env:pushTable(newCommand("on", "on", "", ":"))
+    Env:pushTable(newCommand("off", "off", "", ":"))
+    Env:pushTable(newCommand("reset", "reset", "", ":"))
+}
+
+if( clk("reset") ) {
+    Reset = 0
+    exit()
+}
+
+if( chatClk(owner()) ) {
+    if(Env:envExec(lastSaid())) {
+        hideChat(1)
+    }
+}

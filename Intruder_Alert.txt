@@ -1,0 +1,19 @@
+@name Intruder Alert
+@inputs Allowable:table
+@persist Found:entity Position:vector
+
+if( first() ) {
+    #include "lib/allowable"
+    
+    Position = entity():pos()
+    
+    runOnTick(1)
+}
+
+if( tickClk() ) {
+    Last = Found
+    Found = closestPlayerWithin(Position, 150)
+    if( Found & Found != Last & !Allowable:aIsAllowed(Found) ) {
+        owner():soundPlay(0, 3, "hl1/fvox/bio_reading.wav")
+    }
+}

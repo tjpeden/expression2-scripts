@@ -1,0 +1,36 @@
+@name 
+@inputs Lane1 Lane2
+@outputs Red Yellow Green
+@persist Green
+@trigger Lane1 Lane2
+
+Yes=1,No=!Yes
+
+if( clk( "TurnYellow" ) ) {
+    Red = No, Yellow = Yes, Green = No
+    timer( "TurnRed", 2500 )
+    exit()
+}
+
+if( clk( "TurnRed" ) ) {
+    Red = Yes, Yellow = No, Green = No
+    exit()
+}
+
+if( clk( "TurnGreen" ) ) {
+    Red = No, Yellow = No, Green = Yes
+    exit()
+}
+
+if( !(Lane1 | Lane2) ) {
+    if( Green ) {
+        stoptimer( "TurnGreen" )
+        timer( "TurnYellow", 5000 )
+    }
+} else {
+    if( !Green ) {
+        stoptimer( "TurnYellow" )
+        timer( "TurnGreen", 5000 )
+    }
+    interval( 100 )
+}

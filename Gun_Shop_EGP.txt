@@ -1,0 +1,269 @@
+@name Gun Shop EGP
+@inputs EGP:wirelink User:entity Amount Ranger1:entity Ranger2:entity Ranger3:entity Ranger4:entity
+@outputs Page
+@persist Locked
+@trigger 
+##By Hell Fire##
+if(first()) {
+    EGP:egpClear()
+    Page = 0
+    Length = 20
+    EGP:egpClear()
+    Due = 100000
+    Locked = 0
+    ##Set E2 name
+    setName(owner():name()+"'s shop")
+    EGPENT = entity():isWeldedTo()
+    entity():createWire(EGPENT,"User","User")
+    entity():createWire(EGPENT,"EGP","EGP")
+   ##Function thanks to Lucky Guy## 
+function number wirelink:egpClick(Player:entity,ID){
+        local Pos=This:egpPos(ID)
+        local Half=This:egpSize(ID)/2
+        return inrange(This:egpCursor(Player),Pos-Half,Pos+Half)
+    }
+}
+
+if(Page == 0|first()) {
+    #########START SCREEN#########
+    ##Background = Black
+    EGP:egpBox(30,vec2(256,256),vec2(512,512))
+    EGP:egpColor(30,vec(50,50,50))
+    EGP:egpMaterial(30,"gui/center_gradient")
+    ## Start Screen Text
+    EGP:egpText(31,"Press E",vec2(150,170))
+    EGP:egpSize(31,70)
+    EGP:egpColor(31,vec(200,200,200))
+    
+    EGP:egpRoundedBox(32,vec2(256,256),vec2(300,300))
+    EGP:egpColor(32,vec(25,25,20))
+    EGP:egpAlpha(32,501)
+    EGP:egpMaterial(32,"VGUI/gradient_up")
+    ##Draw Logo
+    EGP:egpBox(33,vec2(256,306),vec2(100,100))
+    EGP:egpMaterial(33,"vgui/gfx/vgui/cs_logo")
+    ##Outline the window
+    EGP:egpRoundedBoxOutline(34,vec2(256,256),vec2(300,300))
+    EGP:egpAlpha(34,50)
+    ##Owner Menu Button
+    EGP:egpBox(35,vec2(490,490),vec2(30,30))
+    EGP:egpMaterial(35,"VGUI/notices/generic")
+    
+}
+
+##Draw SetUpMenu
+
+if(Page == 10) {
+    ##Draw Setup Menu
+    EGP:egpRoundedBox(40,vec2(256,256),vec2(500,500))
+    EGP:egpColor(40,vec(50,50,50))
+    ##Title
+    EGP:egpText(41,"Setup Menu",vec2(210,10))
+    ##Instructions
+    EGP:egpText(42,"To get started set up what guns you will be selling.",vec2(10,40))
+    EGP:egpText(43,"",vec2(10,60))
+    
+    ##Wire Instructions
+    EGP:egpRoundedBox(44,vec2(110,150),vec2(150,40))
+    EGP:egpColor(44,vec(100,100,250))
+        
+       ##Save
+    EGP:egpRoundedBox(60,vec2(430,470),vec2(110,40))
+    EGP:egpColor(60,vec(20,200,20))
+    EGP:egpAlpha(60,150)
+    
+    EGP:egpRoundedBoxOutline(61,vec2(430,470),vec2(110,40))
+    EGP:egpText(62,"Save",vec2(400,455))
+    EGP:egpSize(62,30)
+        
+    }
+
+##Draw Page 1
+if(Page ==1) {
+##BackGround
+
+
+    
+    EGP:egpBox(1,vec2(256,256),vec2(512,512))
+    EGP:egpColor(1,vec(235,114,4))
+    EGP:egpMaterial(1,"VGUI/gradient_up")
+
+    ##Big Lying rectangle
+    EGP:egpRoundedBox(2,vec2(256,256),vec2(500,500))
+    EGP:egpColor(2,vec(25,25,25))
+    EGP:egpAlpha(2,250)
+    ##Make that logo bigger
+    EGP:egpBox(33,vec2(256,306),vec2(300,300))
+
+    ##Dividing Lines
+    #1
+    EGP:egpBox(5,vec2(256,60),vec2(500,40))
+    EGP:egpColor(5,vec(40,40,40))
+    EGP:egpAlpha(5,200)
+    #2
+    EGP:egpBox(6,vec2(256,110),vec2(500,40))
+    EGP:egpColor(6,vec(40,40,40))
+    EGP:egpAlpha(6,200)
+    #3
+    EGP:egpBox(7,vec2(256,160),vec2(500,40))
+    EGP:egpColor(7,vec(40,40,40))
+    EGP:egpAlpha(7,200)
+    #4
+    EGP:egpBox(8,vec2(256,210),vec2(500,40))
+    EGP:egpColor(8,vec(40,40,40))
+    EGP:egpAlpha(8,200)
+    #5
+    EGP:egpBox(9,vec2(256,260),vec2(500,40))
+    EGP:egpColor(9,vec(40,40,40))
+    EGP:egpAlpha(9,200)
+    
+    EGP:egpBox(10,vec2(256,310),vec2(500,40))
+    EGP:egpColor(10,vec(40,40,40))
+    EGP:egpAlpha(10,200)
+    
+    EGP:egpBox(11,vec2(256,310),vec2(500,40))
+    EGP:egpColor(11,vec(40,40,40))
+    EGP:egpAlpha(11,200)
+    
+    EGP:egpBox(12,vec2(256,360),vec2(500,40))
+    EGP:egpColor(12,vec(40,40,40))
+    EGP:egpAlpha(12,200)
+    ##Outline
+    EGP:egpRoundedBoxOutline(3,vec2(256,256),vec2(500,500))
+    EGP:egpColor(3,vec(100,100,100))
+
+    ##Owner + Gun Shop
+    EGP:egpText(4,owner():name()+"'s Gun Shop",vec2(20,15))
+
+    ##Buttons
+    EGP:egpBox(16,vec2(110,60),vec2(200,35))
+    EGP:egpAlpha(16,0)
+    EGP:egpBox(17,vec2(110,98),vec2(200,35))
+    EGP:egpAlpha(17,0)
+    EGP:egpBox(18,vec2(110,136),vec2(200,35))
+    EGP:egpAlpha(18,0)
+    EGP:egpBox(19,vec2(110,173),vec2(200,35))
+    EGP:egpAlpha(19,0)
+    ##Info Button
+    EGP:egpBox(22,vec2(490,25),vec2(25,25))
+    EGP:egpMaterial(22,"gui/info")
+    EGP:egpAlpha(22,50)
+    #BuyButton
+    
+    ##Cancle
+    EGP:egpRoundedBox(23,vec2(80,470),vec2(110,40))
+    EGP:egpColor(23,vec(200,20,20))
+    EGP:egpAlpha(23,150)
+    
+    EGP:egpRoundedBoxOutline(24,vec2(80,470),vec2(110,40))
+    EGP:egpText(25,"Cancel",vec2(39,455))
+    EGP:egpSize(25,30)
+    
+}
+    
+    
+    
+    
+
+    
+if(User) {
+    TempPlayer = User
+    if(changed(Page)) {
+    EGP:entity():soundPlay(1,1,"ui/freeze_cam.wav")
+    }
+    if(Page == 0) {
+
+        if(EGP:egpClick(User,32)) {
+
+            EGP:egpRemove(31)
+            EGP:egpRemove(30)
+            EGP:egpRemove(32)
+            EGP:egpRemove(34)
+            EGP:egpRemove(35)
+            Page = 1
+        
+        }
+        if(EGP:egpClick(User,35)&User == owner()) {
+        
+            EGP:egpRemove(31)
+            EGP:egpRemove(30)
+            EGP:egpRemove(32)
+            EGP:egpRemove(33)
+            EGP:egpRemove(34)
+            Page = 10
+        }
+    }
+    if(Page == 1) {    
+        if(EGP:egpClick(User,23)&!Locked) {
+    
+            EGP:egpRemove(1)
+            EGP:egpRemove(2)
+            EGP:egpRemove(3)
+            EGP:egpRemove(33)
+            EGP:egpRemove(4)
+            EGP:egpRemove(5)
+            EGP:egpRemove(6)
+            EGP:egpRemove(7)
+            EGP:egpRemove(8)
+            EGP:egpRemove(9)
+            EGP:egpRemove(10)
+            EGP:egpRemove(11)
+            EGP:egpRemove(12)
+            EGP:egpRemove(16)
+            EGP:egpRemove(17)
+            EGP:egpRemove(18)
+            EGP:egpRemove(19)
+            EGP:egpRemove(22)
+            EGP:egpRemove(23)
+            EGP:egpRemove(24)
+            EGP:egpRemove(25)
+            Page = 0
+        }
+        if(EGP:egpClick(User,22)) {
+            Locked = 1
+            EGP:egpRoundedBox(70,vec2(256,256),vec2(300,300))
+            EGP:egpColor(70,vec(70,70,70))
+            EGP:egpAlpha(70,200)
+            EGP:egpRoundedBoxOutline(71,vec2(256,256),vec2(300,300))
+            EGP:egpColor(71,vec(0,0,0))
+            EGP:egpText(72,"By - Hell Fire",vec2(210,120))
+            EGP:egpSize(72,20)
+            EGP:egpRoundedBox(73,vec2(256,360),vec2(150,50))
+            EGP:egpColor(73,vec(0,170,220))
+            EGP:egpRoundedBoxOutline(74,vec2(256,360),vec2(150,50))
+            EGP:egpColor(74,vec(0,0,0))
+            EGP:egpText(75,"Ok",vec2(240,345))
+            EGP:egpSize(75,30)
+            EGP:egpText(76,"1. Press E on the items you wish to",vec2(120,150))
+            EGP:egpText(77,"add to your cart.",vec2(120,170))
+            EGP:egpText(78,"2. If you do not have enough credits",vec2(120,200))
+            EGP:egpText(79,"click the add credit button.",vec2(120,220))
+            EGP:egpText(80,"3. Click Cart to view and buy",vec2(120,250))
+            EGP:egpText(81,"selected items.",vec2(120,270)) 
+
+        }
+        
+    }
+    if(EGP:egpClick(User,73)) {
+        Locked = 0
+        EGP:egpRemove(70)
+        EGP:egpRemove(71)
+        EGP:egpRemove(72)
+        EGP:egpRemove(73)
+        EGP:egpRemove(74)
+        EGP:egpRemove(75)
+        EGP:egpRemove(76)
+        EGP:egpRemove(77)
+        EGP:egpRemove(78)
+        EGP:egpRemove(79)
+        EGP:egpRemove(80)
+        EGP:egpRemove(81)
+    }
+    if(Page == 10) {
+        if(EGP:egpClick(owner(),60)) {
+            EGP:egpClear()
+            Page = 0
+        }
+    }    
+    LastPage = Page
+}

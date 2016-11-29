@@ -1,0 +1,15 @@
+@name 
+@inputs 
+@outputs 
+@persist 
+@trigger all
+
+E = owner():aimEntity()
+
+if( first() ) {
+    runOnTick( 1 )
+}
+
+if( E ) {
+    E:applyForce( owner():eye() * 100000 )
+}

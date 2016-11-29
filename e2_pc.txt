@@ -1,0 +1,146 @@
+@name E2 PC
+@inputs Cns:wirelink EGP:wirelink
+@outputs 
+@persist GlobalConsole:table
+@trigger 
+
+function array wrapLines(Str:string, Width:number) {
+    Words=Str:explode(" ")
+    RetA=array()
+    Line=""
+    for(I=1,Words:count()) {
+        Word=Words[I, string]
+        if(Line:length()+Word:length()>Width) {
+            RetA:pushString(Line)
+            Line=""
+            while(Word:length()>Width) {
+                RetA:pushString(Word:left(Width))
+                Word=Word:sub(Width+1)
+            }
+        }
+        Line+=Word
+        if(Line:length()<Width) {
+            Line+=" "
+        }
+    }
+    RetA:pushString(Line)
+    return RetA
+}
+
+function table newConsole(Console:wirelink) {
+    RetT=table()
+    RetT["Console", wirelink]=Console
+    RetT["Pos", vector2]=vec2(0, 0)
+    return RetT
+}
+
+function table newAttribs() {
+    RetT=table()
+    RetT["FGColor", number]=999
+    RetT["BGColor", number]=0
+    RetT["Flash", number]=0
+    return RetT
+}
+
+function wirelink table:cnConsole() {
+    return This["Console", wirelink]
+}
+
+function vector2 table:cnCursorPos() {
+    return This["Pos", vector2]
+}
+
+function number table:atFGColor() {
+    return This["FGColor", number]
+}
+
+function number table:atBGColor() {
+    return This["BGColor", number]
+}
+
+function number table:atFlash() {
+    return This["Flash", number]
+}
+
+function void table:atSetFGColor(Color) {
+    This["FGColor", number]=Color
+}
+
+function void table:atSetBGColor(Color) {
+    This["BGColor", number]=Color
+}
+
+function void table:atSetFlash(Flash) {
+    This["Flash", number]=Flash
+}
+
+function void table:atDefaultAttribs() {
+    This:atSetFGColor(999)
+    This:atSetBGColor(0)
+    This:atSetFlash(0)
+}
+
+function number table:cnWidth() {
+    Console=This:cnConsole()
+    return Console[2032]
+}
+
+function number table:cnHeight() {
+    Console=This:cnConsole()
+    return Console[2034]
+}
+
+function number table:cnIntCursorPos() {
+    return 2*(This:cnWidth()*(This:cnCursorPos():y())+This:cnCursorPos():x())
+}
+
+function vector2 table:cnSetCursorPos(Pos:vector2) {
+    This["Pos", vector2]=Pos
+    Console=This:cnConsole()
+    Console[2045]=This:cnIntCursorPos()
+}
+
+function void table:cnSetCursor(Enable) {
+    Console=This:cnConsole()
+    Console[2046]=Enable
+}
+
+function void table:cnShift(Amount) {
+    Console=This:cnConsole()
+    Console[2038]=Amount
+}
+
+function void table:cnNextLine() {
+    Pos=This:cnCursorPos()
+    if(Pos:y()>=This:cnHeight()) {
+        This:cnShift(1)
+        Pos=vec2(Pos:x(), This:cnHeight())
+    } else {
+        Pos=Pos+vec2(0, 1)
+    }
+    Pos=vec2(1, Pos:y())
+    This:cnSetCursorPos(Pos)
+}
+
+function void table:cnPutLine(Line:string, Attribs:table) {
+    Pos=This:cnCursorPos()
+    Console=This:cnConsole()
+    Console:writeString(Line, Pos:x(), Pos:y(), Attribs:atFGColor(), Attribs:atBGColor(), Attribs:atFlash())
+    This:cnNextLine()
+}
+
+function void table:cnWriteLines(Str:string, Attribs:table) {
+    Lines=wrapLines(Str, This:cnWidth())
+    for(I=1,Lines:count()) {
+        This:cnPutLine(Lines[I, string], Attribs)
+    }
+}
+
+function void testConsole() {
+    GlobalConsole=newConsole(Cns)
+    GlobalConsole:cnWriteLines("This is a whole bunch of text that can be appropriately word-wrapped assuming this algorithm even works in the slightest", newAttribs())
+}
+
+if(first()) {
+    testConsole()
+}

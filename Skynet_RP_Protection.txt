@@ -1,0 +1,53 @@
+@name Skynet RP Protection
+@inputs 
+@outputs Results:table
+@persist [Self Data Results]:table Count
+@trigger 
+
+if( first() | duped() ) {
+    #include "lib/mapreduce"
+    
+    function gatherData() {
+        findByClass("prop_physics")
+        Data = findToTable()
+        Count = Data:count()
+        runOnTick(1)
+    }
+    
+    function table:reduce(Result:table) {
+        local Entity = Result[1, entity]
+        local Count = Result[2, number]
+        
+        if( Count > 3 ) {
+            if( Results:exists(Count) ) {
+                Results[Count, table]:pushEntity(Entity)
+            } else {
+                Results[Count, table] = table(Entity)
+            }
+        }
+    }
+    
+    function printResults() {
+        if( Results:count() ) {
+            print(_HUD_PRINTCONSOLE, Results:concat("\n"))
+        }
+    }
+    
+    Self = newController("Skynet", "reduce")
+    gatherData()
+}
+
+Self:masterThink()
+
+if( tickClk() ) {
+    if( Data:count() ) {
+        while( perf() & Self:delegate(table(Data[1, entity])) ) { Data:pop() }
+    } elseif( Self:getCounter() == Count) {
+        Self:resetCounter()
+        printResults()
+        timer("update", 10000)
+        runOnTick(0)
+    }
+}
+
+if( clk("update") ) { gatherData() }

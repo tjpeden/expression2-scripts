@@ -1,0 +1,71 @@
+@name Elevator
+@outputs Floors:array X Y Z NextZ
+@persist Base:entity Angles:angle
+@persist X Y Z
+
+if( first() ) {
+    function void initialize() {
+        runOnTick(1)
+        dsJoinGroup( "Elevator" )
+        
+        Base = entity():isWeldedTo()
+        
+        Base:setMass( 50000 )
+        Base:setMaterial( "Models/XQM/LightLinesRed" )
+        
+        BP = Base:pos()
+        X  = BP:x()
+        Y  = BP:y()
+        Z  = BP:z()
+        Angles = Base:angles()
+    }
+    
+    function void array:insertOrdered(Value) {
+        if( This:count() == 0 | This:max() < Value ) { This:pushNumber(Value) }
+        else {
+            for( I = This:minIndex(), This:maxIndex() ) {
+                if( This[I, number] > Value ) {
+                    This:insertNumber(I, Value)
+                    break
+                }
+            }
+        }
+    }
+    
+    function angle entity:fixAngles(Target:angle) {
+        local Pos = This:pos()
+    
+        local TarQ = quat(Target)
+        local CurQ = quat(This)
+        
+        Q = TarQ/CurQ
+        V = This:toLocal( rotationVector( Q ) + Pos )
+        This:applyTorque( ( 150 * V - 12 * This:angVelVector() ) * This:inertia() )
+    }
+    
+    initialize()
+}
+
+if( dsClk( "Register" ) ) {
+    Floors:insertOrdered( dsGetNumber() )
+}
+
+if( dsClk( "Call" ) ) {
+    Z = dsGetNumber()
+}
+
+if( tickClk() ) {
+    Base:fixAngles(Angles)
+    
+    CurrentZ = Base:pos():z()
+    Diff = CurrentZ - Z
+    
+    if( abs( Diff ) > 5 ) {
+        if( Diff < 0 ) { NextZ = CurrentZ + 3 }
+        elseif( Diff > 0 ) { NextZ = CurrentZ - 1 }
+    } else {
+        NextZ = Z
+    }
+    
+    Base:applyForce( ( ( vec( X, Y, NextZ ) - Base:massCenter() ) * 10 - Base:vel() ) * Base:mass() )
+}

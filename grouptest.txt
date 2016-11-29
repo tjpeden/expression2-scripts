@@ -1,0 +1,13 @@
+@name 
+@inputs 
+@outputs 
+@persist 
+@trigger all
+
+interval( 500 )
+
+if( first() ) {
+    gSetGroup( owner():name() )
+}
+
+print( gGetGroup() )

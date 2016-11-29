@@ -1,0 +1,23 @@
+@name Target Finder
+@inputs FleetType:string
+@outputs Target:entity
+@persist Target:entity
+@trigger all
+
+interval( 2000 )
+
+if( first() ) {
+    findExcludePlayer( owner() )
+    findExcludeClass( FleetType )
+    #findIncludeClass( "player" )
+    #findIncludeClass( "npc_antlion" )
+    #findIncludeClass( "npc_vortigaunt" )
+}
+
+if( Target ) {
+    Num = findInSphere( owner():pos(), 1000 )
+    if( Num > 0 ) {
+        Target = findClosest( owner():pos() )
+        #print( "Found target!" )
+    }
+}

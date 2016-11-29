@@ -1,0 +1,14 @@
+@name Holo Sphere
+@inputs Holo:wirelink
+@outputs
+@persist Timer
+
+interval(20)
+Timer += 0.02
+
+ZCos = cos(Timer*5.625)
+Holo:setNumber("X",sin(Timer*360)*ZCos)*20)
+Holo:setNumber("Y",cos(Timer*360)*ZCos)*20)
+Holo:setNumber("Z",sin(Timer*5.625))*20)
+Holo:setNumber("FadeRate",1)
+Holo:setNumber("Active",1)

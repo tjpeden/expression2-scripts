@@ -1,0 +1,61 @@
+@name Automated Turret
+@outputs Fire
+@persist Self:entity Turret:entity Target:entity Angle:angle
+@persist Threshold
+@model models/beer/wiremod/hydraulic.mdl
+
+if( first() ) {
+    runOnTick(1)
+    
+    Self = entity()
+    Self:isWeldedTo():setMaterial( "Models/XQM/LightLinesRed" )
+    
+    Threshold = 5000
+    
+    findExcludeEntity( owner() )
+}
+
+if( !Turret ) {
+    if( ->Fire ) {
+        Es = ioOutputEntities("Fire")
+        Turret = Es[1, entity]
+    }
+}
+
+if( Turret & tickClk() ) {
+    P = Self:pos() + vec( 0, 0, 15 )
+    
+    if( !Target & findCanQuery() ) {
+        findByClass( "npc_*" )
+        N = findClipToSphere( Turret:pos(), Threshold )
+        Fire = !!N
+        
+        if( N > 0 ) {
+            Target = findClosest( Self:pos() )
+        }
+    }
+    
+    if( Target ) {
+        Distance = Turret:pos():distance( Target:pos() )
+        if( Distance > Threshold ){
+            Target = noentity()
+            exit()
+        }
+        Offset = tan( Target:radius() / Distance )
+        Pos = Target:pos() + vec( 0, 0, Target:height() / 2 ) # random(0, 10), random(0, 10)
+        Angle = ( Pos - Turret:pos() ):toAngle() + ang(0, -Offset * 2, 0)
+        
+        rangerFilter( Turret )
+        RD = rangerOffset( Turret:pos(), Pos )
+        Fire = RD:entity() == Target
+    } else { Angle = Self:angles() }
+    
+    TarQ = quat( Angle )
+    CurQ = quat( Turret )
+    
+    Q = TarQ/CurQ
+    V = Turret:toLocal( rotationVector( Q ) + P )
+    Turret:applyTorque( ( 150 * V - 12 * Turret:angVelVector() ) * Turret:inertia() )
+    
+    Turret:applyForce( ( ( P - Turret:massCenter() ) * 10 - Turret:vel() ) * Turret:mass() )
+}

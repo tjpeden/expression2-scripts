@@ -1,0 +1,17 @@
+@name Const Table
+@inputs 
+@outputs Table:table
+@persist 
+@trigger 
+
+if(first()|duped()) {
+    Table=table()
+    Table["needlesjim", number]=0
+    Table["Insidiea", number]=0
+    Table["STEAM_0:0:27087743", number]=1 #Grissess
+    Table[")-{stta}-( ---PAWNER---", number]=0
+    Table["Herb the Perv", number]=0
+    Table["{N}Spell", number]=0
+    Table["Gghant01", number]=0
+    Table["STEAM_0:0:19664077", number]=1 #DwG TJ
+}

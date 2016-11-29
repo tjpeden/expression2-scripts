@@ -1,0 +1,31 @@
+@name Force Test
+@outputs Z Offset Mass
+@persist Ship:entity Offset
+
+if( first() ) {
+    runOnTick( 1 )
+    Ship = entity():isConstrainedTo()
+    Offset = 15
+}
+
+ShipAngle= ( Ship:angles() * 20 + Ship:angVel() )
+ShipPos = Ship:pos()
+ShipRight = Ship:right()
+ShipForward = Ship:forward()
+ShipUp = Ship:up()
+
+Lev = sqrt( ( Ship:inertia():length()^2 ) / 3 )
+
+#Ship:applyForce( ( vec( 0, 0, 9.058 ) - Ship:vel() ) * Ship:mass() )
+Mass = Ship:mass()
+Z = Ship:vel():z()
+if( Z > 0 ) { Offset -= 0.0001 }
+elseif( Z < 0 ) { Offset += 0.0001 }
+Ship:applyForce( ( vec( 0, 0, Offset ) - Ship:vel() ) * Ship:mass() )
+
+Ship:applyOffsetForce(  ShipUp    * ShipAngle:pitch(), ShipPos + ShipForward * Lev )
+Ship:applyOffsetForce( -ShipUp    * ShipAngle:pitch(), ShipPos - ShipForward * Lev )
+Ship:applyOffsetForce(  ShipForward * ShipAngle:yaw(),   ShipPos + ShipForward * Lev )
+Ship:applyOffsetForce( -ShipRight * ShipAngle:yaw(),   ShipPos - ShipForward * Lev )
+Ship:applyOffsetForce(  ShipUp    * ShipAngle:roll(),  ShipPos + ShipRight   * Lev )
+Ship:applyOffsetForce( -ShipUp    * ShipAngle:roll(),  ShipPos - ShipRight   * Lev )

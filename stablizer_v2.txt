@@ -1,0 +1,30 @@
+@name Stablizer v2
+@inputs On Ship:entity ExtMass
+@outputs Parts:array
+@persist 
+@trigger all
+
+runOnTick(1)
+
+if( !On )
+{
+    exit()
+}
+
+Parts = Ship:getConstraints()
+
+Mass = Ship:mass() + ExtMass
+
+ShipAng=(Ship:angles()*20+Ship:angVel())
+ShipPos=Ship:pos()
+ShipRight=Ship:right()
+ShipForward=Ship:forward()
+ShipUp=Ship:up()
+Ship:applyForce((vec(0,0,9.015)-Ship:vel())*Mass)
+Lev=sqrt((Ship:inertia():length()^2)/3)
+Ship:applyOffsetForce( ShipUp*ShipAng:pitch()  ,ShipPos+ShipForward*Lev)
+Ship:applyOffsetForce(-ShipUp*ShipAng:pitch()  ,ShipPos-ShipForward*Lev)
+Ship:applyOffsetForce( ShipRight*ShipAng:yaw() ,ShipPos+ShipForward*Lev)
+Ship:applyOffsetForce(-ShipRight*ShipAng:yaw() ,ShipPos-ShipForward*Lev)
+Ship:applyOffsetForce( ShipUp*ShipAng:roll()   ,ShipPos+ShipRight*Lev)
+Ship:applyOffsetForce(-ShipUp*ShipAng:roll()   ,ShipPos-ShipRight*Lev)

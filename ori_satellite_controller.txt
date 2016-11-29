@@ -1,0 +1,27 @@
+@name Ori Satellite Controller
+@inputs Turret:wirelink
+@outputs 
+@persist Owner:entity Cloak
+@trigger 
+
+if( first() ) {
+    runOnTick(1)
+    
+    Owner = owner()
+    
+    #dsSend( "Bind.Attack1", "DSS.Events", 2, 1 )
+    dsSend( "Bind.Attack2", "DSS.Events", 2, 1 )
+    
+    Turret["Active", number] = 1
+}
+
+if( Owner:keyAttack1() ) {
+    Turret["Fire", number] = 1
+} else {
+    Turret["Fire", number] = 0
+}
+
+if( dsClk( "Attack2.Triggered" ) ) {
+    Cloak = !Cloak
+    Turret["Cloak", number] = Cloak
+}    

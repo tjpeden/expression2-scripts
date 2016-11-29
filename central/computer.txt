@@ -1,0 +1,16 @@
+@name Central Computer
+@inputs 
+@outputs InRange:array
+@persist 
+@trigger all
+
+if( first() ) {
+    print( "Central Computer System 1.0" )
+}
+
+interval( 5000 )
+
+if( clk() ) {
+    findInSphere( entity():pos(), 5000 )
+    InRange = findToArray()
+}

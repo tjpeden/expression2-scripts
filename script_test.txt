@@ -1,0 +1,14 @@
+@name Script Test
+
+function void table:write(Str:string) {
+    This:pushString(Str)
+}
+
+Name = "Test1"
+Script = table()
+
+Script:write("play")
+
+Global = gTable(Name)
+Global[Name, table] = Script
+selfDestruct()

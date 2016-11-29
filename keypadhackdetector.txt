@@ -1,0 +1,68 @@
+@name KeypadHackDetector
+@persist [ColorBase ColorEntity]:vector
+@persist [Alarm AlarmLast]:entity HackToolName:string
+@persist Stoped StopedLast
+@model models/cheeze/pcb2/pcb1.mdl
+interval(200)
+
+Base = entity():isWeldedTo()
+
+if (Base:model() == "models/props_lab/keypad.mdl")
+{
+if (first()) {timer("TickA",500), entity():setMass(0)}
+
+if (clk("TickB")) {timer("TickA",300), ColorEntity = vec(0,255,0)}
+if (clk("TickA")) {timer("TickB",500), ColorEntity = vec(0,0,0)}
+
+findByClass("player")
+Found = findClosest(Base:pos())
+
+if (Found:aimEntity() == Base)
+{
+    HackToolName = "keypad_cracker"
+    if (Found:weapon():type() == HackToolName)
+    {
+        ColorBase = vec(255,0,0)
+        if (Found:keyAttack1() | Found:keyAttack2())
+        {
+            Alarm = Found
+            if (Alarm & !AlarmLast)
+            {
+                timer("ResetAlarm",1000)
+    soundPlay(1,0,"ambient/levels/labs/teleport_alarm_loop1.wav")
+    hint(Found:name() + " Is " + HackToolName + " Your Keypad!",100)
+                ColorBase = vec(255,0,0)
+                AlarmLast = Alarm
+            }
+        }
+    } else {ColorBase = vec(0,255,0), Alarm = Alarm}
+    holoDelete(1)
+}
+else
+{
+    ColorBase = vec(0,0,255)
+    holoCreate(1,Base:pos(),vec(0.8,0.4,0.3),entity():angles())
+    holoMaterial(1,"phoenix_storms/metal")
+    Stop = 1
+    Stoped = 1
+}
+if (clk("ResetAlarm") | Stop)
+{
+    Alarm = noentity()
+    soundStop(1)
+    Stop = 0
+}
+
+if (AlarmLast:aimEntity() != Base & AlarmLast & Stoped)
+{
+hint(AlarmLast:name() + " Stoped " + HackToolName + " Your Keypad!",100)
+AlarmLast = noentity()
+Stoped = 0
+}
+
+Base:setColor(ColorBase)
+entity():setColor(ColorEntity)
+if (ColorEntity == vec(0,255,0)) {Alpha = 255} else {Alpha = 0}
+entity():setAlpha(Alpha)
+} 
+# else {hint("Error, Place this on a keypad.",100), selfDestruct()}

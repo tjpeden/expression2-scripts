@@ -1,0 +1,16 @@
+@name Anc Con Test
+@inputs Con:wirelink
+@outputs 
+@persist 
+@trigger 
+
+if(first()){runOnTick(1)}
+
+Con["Name A", string] = "Answer"
+Con["A", number] = 42
+
+Con["Name B", string] = "Fav"
+Con["B", number] = 1687
+
+Con["Name C", string] = "Reno"
+Con["C", number] = 911

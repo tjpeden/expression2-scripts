@@ -1,0 +1,23 @@
+@name Stablizer Test
+
+runOnTick(1)
+
+Ship = entity():isConstrainedTo()
+
+ShipAngle = ( Ship:angles() * 20 + Ship:angVel() )
+
+ShipPos = Ship:pos()
+ShipRight = Ship:right()
+ShipForward = Ship:forward()
+ShipUp = Ship:up()
+
+Ship:applyForce( ( vec(0,0,9.015) - Ship:vel() ) * Ship:mass() )
+
+Lev = sqrt( ( Ship:inertia():length()^2 ) / 3 )
+
+Ship:applyOffsetForce( ShipUp * ShipAngle:pitch()  ,ShipPos + ShipForward * Lev)
+Ship:applyOffsetForce(-ShipUp * ShipAngle:pitch()  ,ShipPos - ShipForward * Lev)
+#Ship:applyOffsetForce( ShipRight * ShipAngle:yaw() ,ShipPos + ShipForward * Lev)
+#Ship:applyOffsetForce(-ShipRight * ShipAngle:yaw() ,ShipPos - ShipForward * Lev)
+Ship:applyOffsetForce( ShipUp * ShipAngle:roll()   ,ShipPos + ShipRight * Lev)
+Ship:applyOffsetForce(-ShipUp * ShipAngle:roll()   ,ShipPos - ShipRight * Lev)

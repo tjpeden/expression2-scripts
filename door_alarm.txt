@@ -1,0 +1,68 @@
+@name Door Alarm
+@inputs Keypad
+@outputs Door
+@persist Self:entity Owner:entity Allowed:table
+@persist Use
+@model models/props/autoportal_frame/autoportal_frame.mdl
+
+if( first() | duped() ) {
+    Owner = owner()
+    Self = entity()
+    
+    E = Self:isConstrainedTo()
+    E:setMaterial( "models/shiny" )
+    
+    Allowed = table()
+    Allowed[Owner:steamID(), number] = 1
+}
+
+if( ~Keypad & !Keypad ) { exit() }
+
+interval( 200 )
+
+W = Owner:weapon():type() == "weapon_physgun"
+UL = Use
+Use = Owner:keyUse()
+
+if( W & Use & Use != UL ) {
+    E = Owner:aimEntity()
+    
+    if( E & E:isPlayer() ) {
+        ID = E:steamID()
+        Allowed[ID, number] = !Allowed[ID, number]
+        Owner:soundPlay( 0, 0, "garrysmod/content_downloaded.wav" )
+        interval( 300 )
+        exit()
+    }
+}
+
+SelfPos = Self:pos()
+
+findByClass("player")
+findClipToSphere( SelfPos, 75 )
+findSortByDistance( SelfPos )
+Players = findToArray()
+
+for( I = 1, Players:count() ) {
+    P = Players[I, entity]
+    
+    if( Allowed[P:steamID(), number] ) {
+        D = 1
+        Self:soundPlay( 0, 0, "" )
+        break
+    }
+}
+
+if( Keypad ) {
+    Door = 1
+    interval( 3000 )
+    exit()
+}
+
+if( D ) {
+    Door = 1
+    exit()
+}
+
+Door = 0
+    

@@ -1,0 +1,142 @@
+@name EGPGangList
+@inputs EGP:wirelink
+@persist Players:table X Y
+
+interval(1000)
+if(first() | duped())
+{
+    printColor(vec(30,190,225), "Usage: #add <name?, #rem <name>")
+    runOnChat(1)
+}
+if(changed(->EGP)|changed(Players:count()))
+{
+    EGP:egpClear()
+
+    EGP:egpRoundedBox(1, vec2(256,256), vec2(512,512))
+    EGP:egpColor(1, vec(0,0,0))
+    
+    EGP:egpRoundedBox(2, vec2(256,256), vec2(500,500))
+    EGP:egpColor(2, vec(30,30,30))
+    
+    EGP:egpRoundedBox(3, vec2(256,256), vec2(512,512))
+    EGP:egpColor(3, vec(80,20,50))
+    EGP:egpAlpha(3, 150)
+    EGP:egpMaterial(3, "gui/center_gradient")
+    
+    EGP:egpRoundedBox(4, vec2(256,80), vec2(384,60))
+    EGP:egpAlpha(4, 1)
+    
+        EGP:egpText(5, "G", vec2(140,60))
+        EGP:egpText(6, "a", vec2(165,60))
+        EGP:egpText(7, "n", vec2(183,60))
+        EGP:egpText(8, "g", vec2(203,60))
+        EGP:egpText(9, "M", vec2(240,60))
+        EGP:egpText(10, "e", vec2(268,60))
+        EGP:egpText(11, "m", vec2(287,60))
+        EGP:egpText(12, "b", vec2(315,60))
+        EGP:egpText(13, "e", vec2(335,60))
+        EGP:egpText(14, "r", vec2(354,60))
+        EGP:egpText(15, "s", vec2(367,60))
+    
+    
+    
+    for(I = 1, 11)
+    {
+        X = (I + 4)
+          
+        #EGP:egpColor(X, vec(255,(255 - (I*23)),255))
+        EGP:egpColor(X, vec(161,255,255))
+        EGP:egpFont(X, "Coolvetica")
+        EGP:egpSize(X, 40)
+    }
+    
+    EGP:egpRoundedBox(16, vec2(256,300), vec2(384,300))
+    EGP:egpAlpha(16, 2)
+}
+elseif(changed(Players:count())|changed(players():count()))
+{ 
+   for(I = 1,Players:count())
+    {
+        K = Players:keys()[I,string]
+        V = Players[K,entity]
+        C = teamColor(V:team())
+        if(!V)
+        {
+            Players:remove(K)
+        }
+        else
+        {
+            EGP:egpText((I+16), I+") "+V:name(), vec2(80, 135+(I*25)))
+            EGP:egpSize((I+16), 20)
+            EGP:egpColor((I+16), C)
+        }
+    }
+    
+    EGP:egpText(35, "You have a total of "+Players:count()+" Members", vec2(145,120))
+    
+    Slots = 11-Players:count()
+    EGP:egpText(36, "You have "+Slots+" slots left", vec2(175,455))
+}
+
+# Chat Commands
+if (chatClk(owner()))
+{   
+    # Explode the string
+    Str = owner():lastSaid():lower():explode(" ")
+    
+    # The usual chat command stuff
+    if(Str[1,string]=="#add")
+    {
+        hideChat(1)
+        TP = findPlayerByName(Str[2,string])
+        if(Players:count()<11)
+        {
+            if(TP)
+            {
+                TPS = TP:steamID()
+                TPN = TP:name()
+                if(!Players:exists(TPS))
+                {
+                    printColor(vec(30,190,225),"Added Player '" + TPN + "'")
+                    Players[TPS,entity] = TP
+                } 
+                else
+                {
+                    printColor(vec(225,30,30),"Player '" + TPN + "' is already whitelisted.") 
+                } 
+            }
+           else
+            {                
+                printColor(vec(225,30,30),"Player '" + Str[2,string] + "' not found!")
+            }
+        }
+        else
+        {                
+            printColor(vec(225,30,30),"List is full!")
+        }   
+    }    
+    elseif(Str[1,string]=="#rem")
+    {
+        hideChat(1)
+        TP = findPlayerByName(Str[2,string])
+        if(TP)
+        {   
+            TPS = TP:steamID()
+            TPN = TP:name() 
+            if(Players:exists(TPS))
+            {
+                printColor(vec(30,190,225),"Removed Player '" + TPN + "'")
+                Players:remove(TPS)
+            }
+            else
+            {
+                printColor(vec(225,30,30),"Player '" + TPN + "' is not whitelisted.")
+            }
+        }
+        else
+        {                
+            printColor(vec(225,30,30),"Player '" + Str[2,string] + "' not found!")
+        }
+    }
+    
+}

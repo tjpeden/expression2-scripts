@@ -1,0 +1,126 @@
+@name EGP Screen2
+@inputs E:wirelink
+@persist Owner:entity Self:entity Controllers:array Map:table Buttons:array NextID
+@persist App:string
+
+function void wirelink:egpDimensions(ObjectID) {
+    TopLeft = This:egpPos(ObjectID)
+    BottomRight = TopLeft + This:egpSize(ObjectID)
+}
+
+function void wirelink:egpButton(Text:string, Position:vector2, Width) {
+    ButtonID = NextID, NextID++
+    TextID = NextID, NextID++
+    
+    This:egpDrawTopLeft(1)
+    This:egpRoundedBoxOutline(ButtonID, Position, vec2(Width,30))
+    This:egpText(TextID, Text, vec2(0,0))
+    This:egpAlign(TextID, 1, 1)
+    This:egpParent(TextID, ButtonID)
+    
+    Buttons:pushNumber(ButtonID)
+}
+
+function void wirelink:egpHighlight(ObjectID) {
+    This:egpColor(ObjectID + 1, vec(0, 255, 0))
+}
+
+function void wirelink:egpUnhighlight(ObjectID) {
+    This:egpColor(ObjectID + 1, vec(255, 255, 255))
+}
+
+function void wirelink:egpCreateCursor(ObjectID) {
+    This:egpCircle(ObjectID, vec2(256,256), vec2(5,5))
+    This:egpParentToCursor(ObjectID)
+    This:egpColor(ObjectID, vec(255, 0, 0))
+}
+
+function normal entity:lookingAt(Other:entity) {
+    return This:aimEntity() == Other
+}
+
+function number array:last() {
+    return This[This:maxIndex(), number]
+}
+
+function void run(Name:string) {
+    dsSend(Name, "EGP.Portal", entity())
+    dsSend("Bind.Use", "DSS.Events", 2, 0)
+    runOnTick(0)
+}
+
+function void register(Name:string) {
+    Controllers:pushString(Name)
+}
+
+function void createButtons() {
+    for(I = Controllers:minIndex(), Controllers:maxIndex()) {
+        N = I -1
+        
+        Name = Controllers[I, string]
+        E:egpButton(Name, vec2(floor(N / 16) * 128, N * 32), 126)
+        Map[Buttons:last(), string] = Name
+    }
+}
+
+if( first() ) {
+    dsJoinGroup("EGP.Portal")
+    
+    App = "Screen2"
+    Owner = owner()
+    Map = table()
+}
+
+if( first() | dsClk("Update") ) {
+    dsSend("Register", "EGP.Portal", App)
+    exit()
+}
+
+if( dsClk(App) ) {
+    runOnTick(1)
+    
+    dsSend("Bind.Use", "DSS.Events", 2, 1)
+    
+    NextID = 1
+    
+    E:egpClear()
+    
+    register("Main")
+    createButtons()
+    
+    E:egpCreateCursor(NextID), NextID++
+}
+
+if(!Self) {
+    if(->E) { Self = E:entity() }
+    exit()
+}
+
+if( Owner:lookingAt(Self) ) {
+    E:egpPos(1, vec2())
+    Cursor = E:egpCursor(Owner)
+    
+    for(I = Buttons:minIndex(), Buttons:count()) {
+        ID = Buttons[I, number]
+        E:egpDimensions(ID)
+        
+        if(inrange(Cursor, TopLeft, BottomRight)) {
+            E:egpHighlight(ID)
+        } else {
+            E:egpUnhighlight(ID)
+        }
+    }
+}
+
+if(dsClk("Use.Triggered")) {
+    Cursor = E:egpCursor(Owner)
+    
+    for(I = Buttons:minIndex(), Buttons:count()) {
+        ID = Buttons[I, number]
+        E:egpDimensions(ID)
+        
+        if(inrange(Cursor, TopLeft, BottomRight)) {
+            if(Map:exists(ID)) { run(Map[ID, string]) }
+        }
+    }
+}

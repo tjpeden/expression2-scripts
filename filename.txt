@@ -1,0 +1,37 @@
+@name 
+@inputs 
+@outputs 
+@persist NID
+@trigger 
+
+NID = 0
+
+function number nextID() {
+    local ID = NID
+    NID += 1
+    return ID
+}
+
+function table newBox(Type:string) {
+    local T = table()
+    
+    T["ID", number] = nextID()
+    T["draw", string] = "egp"+Type
+    
+    return T
+}
+
+function table:cSetColor(Color:vector) {
+    This["Color", vector] = Color
+}
+
+function table:cSetAlpha(Alpha) {
+    This["Alpha", number] = Alpha
+}
+
+function table:cSetMaterial(Material:string) {
+    This["Material", string] = Material
+}
+
+function table:cRender(EGP:wirelink) {
+    

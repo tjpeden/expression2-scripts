@@ -1,0 +1,25 @@
+@name Haunt
+@inputs 
+@outputs 
+@persist N
+@trigger 
+
+if(first()) {
+    holoCreate(1, entity():pos(), vec(1, 1, 1), ang(), vec(255, 255, 255), "models/gman.mdl")
+    holoAlpha(1, 1)
+    N=0
+    holoAnim(1, 5)
+    runOnTick(1)
+    timer("Inc", 3000)
+}
+
+if(tickClk()) {
+    holoPos(1, holoEntity(1):pos()+vec(1, 0, 0))
+}
+
+if(clk("Inc")) {
+    N=N+1
+    #holoAnim(1, N)
+    print(N:toString())
+    timer("Inc", 1500)
+}

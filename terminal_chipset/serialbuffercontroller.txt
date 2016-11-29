@@ -1,0 +1,8 @@
+@name Serializer Buffer
+@inputs Text:string Ready
+@outputs String:string
+@persist Buffer:array
+#@trigger all
+
+if( ~Text ) { Buffer:pushString( Text ) }
+if( Ready & Buffer:count() > 0 ) { String = Buffer:shiftString() }

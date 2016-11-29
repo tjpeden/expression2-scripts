@@ -1,0 +1,219 @@
+@name MDHolodar Renderer
+@inputs 
+@outputs 
+@persist EIDtoHID:table Entities:table CurIdx Base:vector BaseEnt:entity Scale NextHID
+@persist Env:table
+@trigger 
+
+if(first()|duped()) {
+    #include "lib/command"
+    
+    runOnTick(1)
+    runOnChat(1)
+    timer("MDH.CreateHolos", 3000)
+    
+    NextHID=1
+    Base=entity():pos()
+    Scale=0.1
+    
+    function void mdhUpdate() {
+        local Reps=0
+        local NumItems=Entities:count()
+        if(NumItems==0) {
+            exit()
+        }
+        if(BaseEnt) {
+            Base=BaseEnt:pos()
+        }
+        while(perf(90)) {
+            if(Reps>=NumItems) {
+                return
+            }
+            local Ent=Entities[CurIdx, entity]
+            local HID=EIDtoHID[Ent:id(), number]
+            if(HID) {
+                holoPos(HID, Base+(Ent:boxCenterW()-Base)*Scale)
+                if(Ent:isPlayer()) {
+                    holoAng(HID, Ent:eyeAngles())
+                } else {
+                    holoAng(HID, Ent:angles())
+                }
+            }
+            CurIdx+=1
+            if(CurIdx>Entities:count()) {
+                CurIdx=1
+            }
+            Reps+=1
+        }
+    }
+    
+    function void mdhCreateHolos() {
+        for(I=1, Entities:count()) {
+            if(!holoCanCreate()) {
+                print(EIDtoHID:count():toString()+" holos so far; terminating on canCreate")
+                return
+            }
+            local Ent=Entities[I, entity]
+            local HID=EIDtoHID[Ent:id(), number]
+            if(!HID) {
+                holoCreate(NextHID, Base+(Ent:boxCenterW()-Base)*Scale, 0.1*Scale*Ent:boxSize(), Ent:angles(), vec(0, 255, 0), "cube")
+                holoAlpha(NextHID, 127)
+                holoDisableShading(NextHID, 1)
+                if(Ent:isPlayer()) {
+                    holoModel(NextHID, "cone")
+                    holoColor(NextHID, teamColor(Ent:team()))
+                    holoAng(NextHID, ang(90, 0, 0))
+                    NextHID=NextHID+1
+                    holoCreate(NextHID, Base+(Ent:boxCenterW()-Base)*Scale, 0.1*Scale*Ent:boxSize(), ang(), vec(0, 0, 0), "cone")
+                    holoParent(NextHID-1, NextHID)
+                    holoAlpha(NextHID, 127)
+                    holoDisableShading(NextHID, 1)
+                    if(Ent==owner()) {
+                        holoColor(NextHID, vec(127, 0, 255))
+                    } elseif(Ent:isSuperAdmin()) {
+                        holoColor(NextHID, vec(255, 0, 0))
+                    } elseif(Ent:isAdmin()) {
+                        holoColor(NextHID, vec(255, 127, 0))
+                    } elseif(owner():isSteamFriend(Ent)) {
+                        holoColor(NextHID, vec(0, 255, 0))
+                    } else {
+                        holoColor(NextHID, vec(255, 255, 0))
+                    }
+                }
+                EIDtoHID[Ent:id(), number]=NextHID
+                NextHID=NextHID+1
+                if(!perf()) {
+                    print(EIDtoHID:count():toString()+" holos so far; terminating on perf")
+                    return
+                }
+            }
+        }
+        #print(EIDtoHID:count():toString()+" holos so far; terminating normally")
+    }
+    
+    function void mdhWatchPlayers(Args:table, Ret:table) {
+        local Players=players()
+        Entities=table()
+        for(I=1,Players:count()) {
+            Entities:pushEntity(Players[I, entity])
+        }
+        print("Watching "+Entities:count():toString()+" entities.")
+    }
+    
+    function void mdhWAddPlayers(Args:table, Ret:table) {
+        local Players=players()
+        for(I=1,Players:count()) {
+            Entities:pushEntity(Players[I, entity])
+        }
+        print("Watching "+Entities:count():toString()+" entities.")
+    }
+    
+    function void mdhWAddMe(Args:table, Ret:table) {
+        Entities:pushEntity(owner())
+        print("Watching "+Entities:count():toString()+" entities.")
+    }
+    
+    function void mdhWatchAll(Args:table, Ret:table) {
+        findByClass("*")
+        Entities=findToTable()
+        print("Watching "+Entities:count():toString()+" entities.")
+    }
+    
+    function void mdhWatchProps(Args:table, Ret:table) {
+        findByClass("prop_physics")
+        Entities=findToTable()
+        print("Watching "+Entities:count():toString()+" entities.")
+    }
+    
+    function void mdhWAddProps(Args:table, Ret:table) {
+        findByClass("prop_physics")
+        local Ents=findToTable()
+        for(I=1,Ents:count()) {
+            Entities:pushEntity(Ents[I, entity])
+        }
+        print("Watching "+Entities:count():toString()+" entities.")
+    }
+    
+    function void mdhWAddPropsIn(Args:table, Ret:table) {
+        findByClass("prop_physics")
+        findClipToSphere(owner():pos(), Args[1, number])
+        findSortByDistance(owner():pos())
+        local Ents=findToTable()
+        for(I=1,Ents:count()) {
+            Entities:pushEntity(Ents[I, entity])
+        }
+        print("Watching "+Entities:count():toString()+" entities.")
+    }
+    
+    function void mdhWAddIn(Args:table, Ret:table) {
+        findByClass(Args[1, string])
+        findClipToSphere(owner():pos(), Args[2, number])
+        findSortByDistance(owner():pos())
+        local Ents=findToTable()
+        for(I=1,Ents:count()) {
+            Entities:pushEntity(Ents[I, entity])
+        }
+        print("Watching "+Entities:count():toString()+" entities.")
+    }
+    
+    function void mdhWClear(Args:table, Ret:table) {
+        Entities=table()
+        EIDtoHID=table()
+        holoDeleteAll()
+        NextHID=1
+    }
+    
+    function void mdhRescale(Args:table, Ret:table) {
+        Scale=Args[1, number]
+    }
+    
+    function void mdhRebase(Args:table, Ret:table) {
+        Base=owner():aimEntity():pos()
+    }
+    
+    function void mdhBaseEnt(Args:table, Ret:table) {
+        BaseEnt=owner():aimEntity()
+    }
+    
+    function void mdhClearBase(Args:table, Ret:table) {
+        BaseEnt=noentity()
+    }
+    
+    function void mdhColorEnt(Args:table, Ret:table) {
+        local HID=EIDtoHID[Args[1, entity]:id(), number]
+        if(HID) {
+            holoColor(HID, vec(Args[2, number], Args[3, number], Args[4, number]))
+        }
+    }
+    
+    Env=newEnv()
+    Env:envAddCommand(newCommand("wplayers", "mdhWatchPlayers", ""))
+    Env:envAddCommand(newCommand("waddplayers", "mdhWAddPlayers", ""))
+    Env:envAddCommand(newCommand("waddme", "mdhWAddMe", ""))
+    Env:envAddCommand(newCommand("wprops", "mdhWatchProps", ""))
+    Env:envAddCommand(newCommand("waddprops", "mdhWAddProps", ""))
+    Env:envAddCommand(newCommand("waddpropsin", "mdhWAddPropsIn", "n"))
+    Env:envAddCommand(newCommand("waddin", "mdhWAddIn", "sn"))
+    Env:envAddCommand(newCommand("wall", "mdhWatchAll", ""))
+    Env:envAddCommand(newCommand("wclear", "mdhWClear", ""))
+    Env:envAddCommand(newCommand("dhrescale", "mdhRescale", "n"))
+    Env:envAddCommand(newCommand("dhrebase", "mdhRebase", ""))
+    Env:envAddCommand(newCommand("dhbaseent", "mdhBaseEnt", ""))
+    Env:envAddCommand(newCommand("dhclearbase", "mdhClearBase", ""))
+    Env:envAddCommand(newCommand("dhcolorp", "mdhColorEnt", "pnnn"))
+}
+
+if(tickClk()) {
+    mdhUpdate()
+}
+
+if(chatClk(owner())) {
+    if(Env:envExec(owner():lastSaid())) {
+        hideChat(1)
+    }
+}
+
+if(clk("MDH.CreateHolos")) {
+    mdhCreateHolos()
+    timer("MDH.CreateHolos", 2000)
+}

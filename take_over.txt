@@ -1,0 +1,139 @@
+@name Take Over
+@persist Owner:entity Props:array Target:entity
+@persist Data:gtable Epic:table
+@persist Strength
+
+if( first() ) {
+    runOnTick(1)
+    Strength = 500
+    Owner = owner()
+    
+    function void gtable:update(Key:string, Value) {
+        This["$"+Key, number] = Value - This[Key, number]
+        This[Key, number] = Value
+    }
+    
+    function void gtable:update(Key:string, Value:string) {
+        This[Key, string] = Value
+    }
+    
+    function void gtable:toggle(Key:string) {
+        This:update(Key, !This[Key, number])
+    }
+    
+    function number gtable:current(Key:string) {
+        return This[Key, number]
+    }
+    
+    function number gtable:delta(Key:string) {
+        return This["$"+Key, number]
+    }
+    
+    function number gtable:hasRisen(Key:string) {
+        return This:delta(Key) == 1
+    }
+    
+    function number gtable:hasFallen(Key:string) {
+        return This:delta(Key) == -1
+    }
+    
+    function void table:swepThink() {
+        if(Data["Weapon", string] != This["Weapon", string]) { return }
+        
+        local Keys = This:keys()
+        local I = 0
+        while( I < Keys:count() ) {
+            local Key = Keys[I, string]
+            if( Key == "Weapon") { continue }
+            
+            local Action = This[Key, string]
+            if( Action & Data:hasRisen(Key) ) { Action(This) }
+            
+            I++
+        }
+    }
+    
+    function table newSWEP(Base:string, Actions:table) {
+        local T = table()
+        
+        T["Weapon", string] = Base
+        T:merge(Actions)
+        
+        return T
+    }
+    
+    function number array:contains(Item:entity) {
+        local Count = This:count()
+        local I = 0
+        while( I < Count ) {
+            if( This[I, entity] == Item ) { return 1 }
+            I++
+        }
+        return 0
+    }
+    
+    function void array:orbit(Position:vector) {
+        local Count = This:count()
+        local Cur = curtime()
+        local Radius = max( Count * 50 / pi() / 2, 100 )
+        local Orbit1 = vec( Radius / 3, 0, 10 ):rotate( 0, Cur * 90, 0 )
+        
+        local I = 1
+        while( I <= Count ) {
+            local E = Props[I, entity]
+            local Orbit2 = vec( Radius, 0, 10 ):rotate( 0, -( 360 / Count * I + Cur * 45 ), 0 )
+            E:applyForce( ( ( Position + Orbit1 + Orbit2 - E:massCenter() ) * 10 - E:vel() ) * E:mass() )
+            I++
+        }
+    }
+    
+    function void table:grab() {
+        local E = Owner:aimEntity()
+        if( E:type() == "prop_physics" & Props:count() < 5 & !Props:contains(E) ) {
+            Owner:soundPlay(0, 0, "ambient/tones/elev1.wav")
+            E:setMass(1000)
+            Props:pushEntity(E)
+        }
+    }
+    
+    function void table:kill() {
+        local E = ( Target:isAlive() ? Target : Owner:aimEntity() )
+        if( E:isAlive() ) {
+            Target = E
+            local Position = Target:pos() + vec(0, 0, Target:height() / 2)
+            local I = 0
+            while( I < Props:count() ) {
+                local Prop = Props[I, entity]
+                Prop:applyForce(Strength * Prop:mass() * (Position - Prop:pos()))
+                I++
+            }
+        }
+    }
+    
+    function void table:reset() {
+        Props:clear()
+    }
+    
+    local Actions = table()
+    Actions["Use", string] = "grab"
+    Actions["Reload", string] = "reset"
+    Actions["Attack2", string] = "kill"
+    
+    Epic = newSWEP("weapon_crowbar", Actions)
+    
+    function void think() {
+        Data:update("Use", Owner:keyUse())
+        Data:update("Reload", Owner:keyReload())
+        Data:update("Attack1", Owner:keyAttack1())
+        Data:update("Attack2", Owner:keyAttack2())
+        Data:update("Weapon", Owner:weapon():type())
+        
+        Epic:swepThink()
+        if( !Target:isAlive() ) {
+            local Position = Owner:pos() + vec( 0, 0, 200 )
+            Props:orbit(Position)
+        }
+    }
+}
+
+think()

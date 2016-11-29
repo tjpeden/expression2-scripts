@@ -1,0 +1,31 @@
+@name Hydrolic Controller
+@inputs Clk
+@outputs Door State
+@persist State
+@trigger all
+
+StepPerTick = 1
+Opening = 1
+Closing = 0
+Open = 1160
+Closed = 0
+
+if( first() ) { Door = Closed }
+
+if( ~Clk & Clk ) {
+    State = !State
+}
+
+if( State == Opening ) {
+    if( Door < Open ) {
+        Door += StepPerTick
+        interval( 20 )
+    }
+}
+
+if( State == Closing ) {
+    if( Door > Closed ) {
+        Door -= StepPerTick
+        interval( 20 )
+    }
+}

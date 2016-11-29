@@ -1,0 +1,12 @@
+@name Tune Controller
+
+entity():soundPlay( 0, 0, "ambient/tones/elev1.wav" )
+
+signalSetGroup( "Tune" )
+runOnSignal( "Reset", 0, 1 )
+
+stoptimer( "Repeat" )
+
+signalSend( "Play", 0 )
+
+timer( "Repeat", 3 * 60 * 1000 )

@@ -1,0 +1,22 @@
+@name Sign
+@inputs Screen:wirelink
+@persist Text:array G:gtable
+
+interval( 1000 )
+
+if( first() | duped() ) {
+    G = gTable( "Editor" )
+    Text = array()
+    
+    signalSetGroup( "Editor" )
+    runOnSignal( "Update", 0, 1 )
+}
+
+if( signalClk() ) { Text = G["Text", array]:clone() }
+    
+for( I = 0, 17 ) {
+    T = Text[I, string]
+    Line = " ":repeat( (30 - T:length())/2 ) + T
+    Line += " ":repeat( 30 - Line:length() )
+    Screen:writeString( Line, 0, I )
+}

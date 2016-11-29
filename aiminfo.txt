@@ -1,0 +1,49 @@
+@name What's What
+@inputs Console:wirelink
+@outputs 
+@persist Last:entity
+@trigger all
+
+Yes=1,No=!Yes
+
+if( first() ) {
+    runOnTick(Yes)
+}
+
+E = owner():aimEntity()
+
+if( E != Last ) {
+    Console:setNumber( "Reset", 0 )
+}
+
+if( E ) {
+    if( E:isPlayer() ) {
+        What = "Player:"
+        Console:writeString( "  Name: " + E:name(), 0, 1 )
+    } elseif( E:isNPC() ) {
+        What = "NPC:"
+    } elseif( E:isWeapon() ) {
+        What = "Weapon:"
+    } elseif( E:isVehicle() ) {
+        What = "Vehicle:"
+    } else {
+        What = "Prop:"
+    }
+    
+    Console:writeString( What, 0, 0 )
+    
+    if( E:isNPC() | E:isPlayer() ) {
+        if( E:weapon() ) {
+            W = E:weapon()
+            Console:writeString( "  Weapon: " + W:type(), 0, 2 )
+        }
+    }
+    
+    Console:writeString( "   ID: " + E:id(), 0, 4 )
+    Console:writeString( "Class: " + E:type(), 0, 5 )
+    Console:writeString( "Model: " + E:model(), 0, 6 )
+} else {
+    Console:writeString( "Aim at an entity", 7, 9 )
+}
+
+Last = E

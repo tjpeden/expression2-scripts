@@ -1,0 +1,26 @@
+@name History Buffer Controller
+@inputs Text:string Clear
+@outputs History:array Index
+@persist Index
+
+if( first() ) {
+    Index = 1
+}
+
+if( ~Clear & Clear ) {
+    Index = 1
+    History = array()
+}
+
+if( ~Text & Text:length() > 0 ) {
+    if( Index < 18 ) {
+        History:pushString( Text )
+    } else {
+        History:shift()
+        History:pushString( Text )
+    }
+    
+    Index++
+}
+
+History = History:clone()

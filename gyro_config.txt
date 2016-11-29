@@ -1,0 +1,26 @@
+@name Gyro Config
+@inputs Gyro:wirelink V:wirelink
+@persist Activate
+@model models\SBEP_community\d12shieldemitter.mdl
+
+if( first() ) {
+    runOnTick(1)
+    
+    Activate = 1
+    
+    dsSend("Bind.Use", "DSS.Events", 2, 1)
+}
+
+Active = V["Active", number]
+
+if( dsClk("Use.Triggered") ) {
+    T = dsGetTable()
+    if( T["aim_entity", entity] == Gyro:entity() ) {
+        Activate = !Activate
+    }
+}
+Activate = Activate | Active
+
+Gyro["Level", number]    = !Active & Activate
+Gyro["Freeze", number]   = 0
+Gyro["Activate", number] = Activate

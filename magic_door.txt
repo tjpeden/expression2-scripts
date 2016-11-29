@@ -1,0 +1,13 @@
+@name Magic Door
+@inputs 
+@outputs A:angle
+@persist Door:entity
+@trigger 
+
+runOnTick(1)
+
+if( first() ) {
+    Door = entity():isWeldedTo()
+}
+
+A = Door:angles()

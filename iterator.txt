@@ -1,0 +1,24 @@
+@name Iterator
+@inputs Constraints:array
+@outputs Mass
+@persist Index Temp:array
+@trigger Contraints
+
+runOnTick(1)
+
+if( first() | ~Constraints )
+{
+	Index = 0
+	Temp = array()
+}
+
+if( Index < Constraints:count() )
+{
+	Index++
+	Num = Constraints:entity(Index):mass()
+	Temp:setNumber(Index,Num)
+}
+else
+{
+	Mass = Temp:average()
+}

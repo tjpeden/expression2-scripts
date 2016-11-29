@@ -1,0 +1,126 @@
+@name DSAPI Music Synth
+@inputs 
+@outputs 
+@persist Pitches:array NextChIndex Channels:table NextExecutor NextTime INFINITY
+@trigger 
+
+#DSAPI requirements
+if(dsClk("DSAPI.Ops")) {
+    dsSendDirect("R.DSAPI.Ops", dsGetSender(), ops())
+    exit()
+}
+
+if(dsClk("Service")) {
+    dsSendDirect("R.DSAPI.Service", dsGetSender(), array("DSAPI.Synth"))
+    exit()
+}
+
+if(first()) {
+    A=1
+    As=2^(1/12)
+    B=2^(2/12)
+    C=2^(3/12)
+    Cs=2^(4/12)
+    D=2^(5/12)
+    Ds=2^(6/12)
+    E=2^(7/12)
+    F=2^(8/12)
+    Fs=2^(9/12)
+    G=2^(10/12)
+    Gs=2^(11/12)
+    Pitches=array(A, As, B, C, Cs, D, Ds, E, F, Fs, G, Gs) #count==12
+    NextChIndex=1
+    NextExecutor=0
+    INFINITY=999999
+    NextTime=INFINITY
+    function table newNote(Octave, Pitch, Duration) {
+        RetT=table()
+        RetT["Octave", number]=Octave
+        RetT["Pitch", number]=Pitch
+        RetT["Duration", number]=Duration
+        return RetT
+    }
+    function number table:ntOctave() {
+        return This["Octave", number]
+    }
+    function number table:ntPitch() {
+        return This["Pitch", number]
+    }
+    function number table:ntDuration() {
+        return This["Duration", number]
+    }
+    function number table:ntMult() {
+        return (2^This:ntOctave())*Pitches[This:ntPitch(), number]
+    }
+    function table newChannel(Emitter:entity, Instrument:string, Notes:table) {
+        RetT=table()
+        RetT["Emitter", entity]=Emitter
+        RetT["Instrument", string]=Instrument
+        RetT["Index", number]=NextChIndex
+        NextChIndex+=1
+        RetT["Notes", table]=Notes
+        RetT["NextT", number]=0
+        return RetT
+    }
+    function entity table:chEmitter() {
+        return This["Emitter", entity]
+    }
+    function string table:chInstrument() {
+        return This["Instrument", string]
+    }
+    function number table:chIndex() {
+        return This["Index", number]
+    }
+    function table table:chNotes() {
+        return This["Notes", table]
+    }
+    function number table:chNextTime() {
+        return This["NextT", number]
+    }
+    function number table:chRunNext() {
+        Notes=This:chNotes()
+        if(!Notes) {
+            soundStop(This:chIndex())
+            return 0
+        }
+        Note=Notes:removeTable(1)
+        This:chEmitter():soundPlay(This:chIndex(), 0, This:chInstrument())
+        soundPitch(This:chIndex(), Note:ntMult()*100)
+        This["NextT", number]=realtime()+Note:ntDuration()
+        return 1
+    }
+    dsJoinGroup("DSAPI")
+    dsJoinGroup("DSAPI.Synth")
+    dsSetScope(2)
+    dsSend("DSAPI.Announce", "DSAPI", 2, array("DSAPI.Synth"))
+}
+
+if(dsClk("DSAPI.Synth.Play")) {
+    Chns=dsGetTable()
+    NextTime=INFINITY
+    NextExecutor=0
+    for(I=1,Chns:count()) {
+        Chn=Chns[I, table]
+        Channels:pushTable(Chn)
+        Dur=Chn:chRunNext()
+    }
+    runOnTick(1)
+}
+
+if(tickClk()) {
+    ToRemove=table()
+    for(I=1,Channels:count()) {
+        Channel=Channels[I, table]
+        if(realtime()>=Channel:chNextTime()) {
+            if(!Channel:chRunNext()) {
+                ToRemove:pushNumber(I)
+            }
+        }
+    }
+    for(I=1,ToRemove:count()) {
+        Channels:removeTable(ToRemove[I, number])
+    }
+    if(!Channels) {
+        runOnTick(0)
+    }
+}

@@ -1,0 +1,26 @@
+@name Hydraulic Controller
+@inputs A D LP RP RRP
+@outputs Left Right Rear
+@persist Forward Rear
+@trigger all
+
+Yes=1
+Mag = 5
+Cor = 0.5
+Rmin = 85
+Rmax = Rmin + 1
+
+interval( 40 )
+
+if( first() ) {
+    Forward = 95
+    Rear = Rmin
+}
+
+Dir = A - D
+
+Left  = Forward - ( Dir * Mag )
+Right = Forward + ( Dir * Mag )
+
+if( RRP > Rmax ) { Rear -= Cor }
+if( RRP < Rmin ) { Rear += Cor }

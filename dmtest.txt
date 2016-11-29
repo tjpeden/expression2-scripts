@@ -1,0 +1,12 @@
+@name dmtest
+@inputs Reset
+
+if( first() ) {
+    dsJoinGroup( "DM Battle" )
+}
+
+if( dsClk( "Ready" ) ) { timer( "Start", 10000 ) }
+
+if( clk( "Start" ) ) { dsSend( "Activate", "DM Battle", 0 ) }
+
+if( Reset & ~Reset ) { dsSend( "Reset", "DM Battle", 0 ) }

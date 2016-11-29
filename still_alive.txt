@@ -1,0 +1,15 @@
+@name Still Alive 
+@persist Name:string
+
+signalSetGroup( "Tune" )
+runOnSignal( "Play", 0, 1 )
+
+if( first() ) {
+    G = gTable( "Tune" )
+    N = G["Next", number]
+    Name = "Tune" + N
+    G["Next", number] = N + 1
+    signalSend( "Reset", 0 )
+}
+
+if( signalClk() ) { entity():soundPlay( Name, 0, "music/portal_still_alive.mp3" ) }

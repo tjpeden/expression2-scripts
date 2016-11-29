@@ -1,0 +1,86 @@
+@name Stargate Interface
+@inputs Gate:wirelink Screen:wirelink Keyboard:wirelink Memory
+@persist Buffer:array Address:array InUse Dial Pipe
+
+runOnTick(1)
+
+if( first() ) {
+    Dial = 1 # We want it to start dialing once the address is entered
+    Gate["Dial Mode", number] = 1 # Fase dial mode
+}
+
+if( Address:count() > 0 ) {
+    Gate["Dial Address", number] = ( Dial ? Address:popNumber() : 0 )
+    Dial = !Dial
+} else {
+    Dial = 1
+    Gate["Dial Address", number] = 0
+}
+
+LastInUse = InUse
+InUse = Keyboard["InUse", number]
+Active = Gate["Active", number]
+Open = Gate["Open", number]
+Dialing = Active & !Open
+
+if( LastInUse & !InUse ) {
+    Buffer = array()
+}
+
+if( InUse & Address:count() == 0 & ~Memory ) {
+    if( Memory == 13 & Buffer:count() == 6 ) {
+        Buffer:pushNumber( Memory )
+        Address = Buffer:clone()
+        Buffer = array()
+    }
+    
+    if( Buffer:count() > 0 & Memory == 127 ) {
+        Buffer:pop()
+    }
+    
+    if( Memory >= 128 & Memory <= 137 ) {
+        Memory -= 80
+    }
+    
+    if( Memory == 138 ) { Memory = 47 }
+    if( Memory == 139 ) { Memory = 42 }
+    if( Memory == 140 ) { Memory = 45 }
+    if( Memory == 141 ) { Memory = 43 }
+    if( Memory == 143 ) { Memory = 46 }
+    
+    if( !Dialing & Buffer:count() < 6 & Memory >= 32 & Memory < 127 ) {
+        Buffer:pushNumber( toByte( toChar( Memory ):upper() ) )
+    }
+}
+
+Display = array()
+
+if( !Dialing ) {
+    # Input
+    Text = ">"
+    for( I = 1, Buffer:count() ) {
+        Text += toChar( Buffer[I, number] )
+    }
+    Display[1, string] = Text + ( Pipe ? "|" : "" )
+    Pipe = !Pipe
+} else {
+    Display[1, string] = "Dialing..."
+}
+
+# Gate Output
+Chevron = Gate["Chevron", number]
+for( I = 1, Chevron ) {
+    Display[ 1 + I, string] = "Chevron " + I + " encoded."
+}
+if( Open ) { Display[9, string] = "Wormhole established!" }
+
+# Chip Stats
+Display[18, string] = "Ops: " + ops()
+
+# Hardcore Screen Printing Action
+for( I = 1, 18 ) {
+    Line = Display[I, string]
+    Line = Line + " ":repeat( 30 - Line:length() )
+    Screen:writeString( Line, 0, I-1 )
+}
+

@@ -1,0 +1,40 @@
+@name RC Car Controller
+@inputs Pod:wirelink
+@inputs Cam:wirelink
+@inputs Hov:wirelink
+@outputs ZVelocity HoverMode
+
+interval( 50 )
+
+E = entity()
+Ball = Hov:entity()
+
+W = Pod:number( "W" )
+A = Pod:number( "A" )
+S = Pod:number( "S" )
+D = Pod:number( "D" )
+Shift = Pod:number( "Shift" )
+Space = Pod:number( "Space" )
+Active = Pod:number( "Active" )
+Bearing = Pod:number( "Bearing" )
+Chair = Pod:entity( "Entity" )
+
+Driver = Chair:driver()
+
+if( Driver != owner() ) { Pod:setNumber( "Eject", 1 ) }
+
+CamPos = Ball:pos() + vec( 0, 0, 20 )
+CamDir = Driver:eye()
+
+Cam:setVector( "Position", CamPos )
+Cam:setVector( "Direction", CamDir )
+Cam:setNumber( "Activated", Active )
+
+Forward = vec2( CamDir )
+Right = vec2( CamPos:cross( CamDir ) ):normalized()
+
+ZVelocity = Space - Shift * 3
+HoverMode = Active
+
+Force = vec( ( (W-S) * Forward ) + ( (D-A) * Right ) )
+Ball:applyForce( Force * 2000 )

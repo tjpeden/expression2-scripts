@@ -1,0 +1,22 @@
+@name 
+@inputs 
+@outputs Diff:string
+@persist E:entity Last:vector
+@trigger all
+
+Yes=1
+
+if( first() ) {
+    runOnTick( Yes )
+    E = entity():isConstrainedTo()
+    Last = E:pos()
+    exit()
+}
+
+if( E ) {
+    D = E:pos() - Last
+    E:applyForce( D * 100 )
+    Last = E:pos()
+    
+    Diff = D:toString()
+}

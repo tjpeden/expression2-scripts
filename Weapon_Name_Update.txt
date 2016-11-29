@@ -1,0 +1,22 @@
+@name Weapon Name Update
+@inputs 
+@outputs 
+@persist Owner:entity Weapon:string
+@trigger 
+
+if( first() ) {
+    runOnTick(1)
+    
+    #include "lib/table"
+    
+    Owner = owner()
+    
+    function think() {
+        Weapon = Owner:weapon():type()
+        if( changed(Weapon) ) {
+            print("Weapon: " + Weapon)
+        }
+    }
+}
+
+think()

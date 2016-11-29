@@ -1,0 +1,23 @@
+@name EGP Button
+@inputs EGP:wirelink User:entity
+
+if(first())
+{
+    runOnTick(1)
+    
+    EGP:egpDrawTopLeft(1)
+    EGP:egpBox(1, vec2(216,216), vec2(80,80))   
+   
+    EGP:egpCircleOutline(2, vec2(0,0), vec2(10,10))
+    EGP:egpColor(2, vec(255,0,0))
+    EGP:egpParentToCursor(2)
+}
+if(User)
+{
+    LeftTop = EGP:egpPos(1)
+    RightBottom = EGP:egpPos(1) + EGP:egpSize(1)
+    Cursor = EGP:egpCursor(User)
+    
+    if(inrange(Cursor, LeftTop, RightBottom))
+    {EGP:egpPos(1, randvec2(0, 432))}
+}

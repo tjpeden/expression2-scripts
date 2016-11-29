@@ -1,0 +1,83 @@
+@name Asguard Beam Controller
+@inputs Pod:wirelink Cam:wirelink
+@outputs AimPos:vector Tracking Dest:vector Everything Send Retrieve
+@persist On Off Hold Press Release Current Last # Constants
+@persist Mouse1 Mouse2 Space Shift Alt
+@persist Pos:vector
+@persist Lock Active
+
+interval(1)
+
+if( first() ) {
+    Off = 0
+    On  = !Off
+    
+    Hold    = 3
+    Press   = 2
+    Release = 1
+    
+    Current = 2
+    Last    = 1
+}
+
+Active = Pod["Active", number]
+Shift  = Pod["Shift",  number]
+
+if( !Active ) {
+    Tracking = Off
+    Cam["Activated", number] = Tracking
+    exit()
+} elseif( Active & $Active ) {
+    E = Pod["Entity", entity]
+    Pos = E:driver():pos() + vec(0, 0, 120)
+    Cam["Parent", entity] = E
+}
+
+Mouse1 = ( Mouse1 >> 1 ) + 2 * Pod["Mouse1", number]
+Mouse2 = ( Mouse2 >> 1 ) + 2 * Pod["Mouse2", number]
+Alt    = ( Alt    >> 1 ) + 2 * Pod["Alt",    number]
+
+if( Alt == Press ) {
+    Tracking = !Tracking
+    Cam["Activated", number] = Tracking
+}
+
+if( Tracking ) {
+    Angle = ang( -Pod["Elevation", number], Pod["Bearing", number], 0 )
+    Cam["Angle", angle] = Angle
+    
+    if( Pod["W", number] | Pod["S", number] ) {
+        OS = vec(1, 0, 0):rotate(Angle:setPitch(-Angle:pitch()))
+        Pos += OS:setZ(-OS:z()) * (10 - (Pod["S", number] * 2) + (Shift * 9)) * (Pod["W", number] - Pod["S", number])
+    }
+    if( Pod["A", number] | Pod["D", number] ) {
+        OS = vec(1, 0, 0):rotate(Angle + ang(-Angle:pitch(), 90, 0))
+        Pos += OS:setZ(-OS:z()) * (6 + (Shift * 8)) * (Pod["A", number] - Pod["D", number])
+    }
+    if( Pod["Space", number] ) {
+        Pos += vec(0, 0, 6 + (Shift * 8))
+    }
+    if( Pod["R", number] ) {
+        E = Pod["Entity", entity]
+        Pos = E:driver():pos() + vec(0, 0, 120)
+    }
+    
+    Cam["Position", vector] = Pos
+    
+    AD = vec(1, 0, 0):rotate(Angle)
+    
+    RD = rangerOffset(1024, Pos, AD)
+    AimPos = RD:position()
+    
+    if( Mouse2 == Press ) {
+        Target = RD:entity()
+        Lock = Target:isValid()
+        if( Lock ) {
+            Dest = Target:pos()
+        }
+    }
+    
+    if( Lock ) {
+        Retrieve = Mouse1 && Current == Current
+    }
+}

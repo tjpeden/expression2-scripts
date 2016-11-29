@@ -1,0 +1,13 @@
+@name 
+@inputs 
+@outputs 
+@persist 
+@trigger all
+
+if( first() )
+{
+    runOnChat(1)
+}
+
+Strings = lastSaid():explode(" ")
+print( Strings:string(1) )

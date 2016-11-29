@@ -1,0 +1,7 @@
+@name Pod Fix
+@inputs Pod:wirelink
+
+interval( 20 )
+if( Pod:number( "Active" ) ) {
+    Pod:setNumber( "Terminate", 1 )
+}

@@ -1,0 +1,23 @@
+@name 
+@inputs Cns:wirelink
+@outputs 
+@persist 
+@trigger 
+
+if(first()) {
+    #include "lib/cns_tty"
+    dsJoinGroup("#test")
+    dsSetScope(2)
+}
+
+if(dsClk("Chat")) {
+    Tbl=dsGetTable()
+    Cns:cnWrite("["+dsGetGroup()+"] ", 9)
+    Cns:cnWrite("<"+Tbl["Sender", entity]:name()+"> ", 90)
+    if(Tbl["Special", number]) {
+        Col=99
+    } else {
+        Col=999
+    }
+    Cns:cnWrite(Tbl["Message", string]+"\n", Col)
+}

@@ -1,0 +1,292 @@
+@name DSAPI EGP Host
+@inputs LocalEGP:wirelink
+@outputs 
+@persist GlobalScreen:table
+#Windows Style Enum
+@persist WS_DECOR WS_RESIZE
+#Render Function Enum
+@persist RF_WINDOW
+@trigger 
+
+#DSAPI requirements
+if(dsClk("DSAPI.Ops")) {
+    dsSendDirect("R.DSAPI.Ops", dsGetSender(), ops())
+    exit()
+}
+
+if(dsClk("Service")) {
+    dsSendDirect("R.DSAPI.Service", dsGetSender(), array("DSAPI.EGP"))
+    exit()
+}
+
+if(first()|duped()) {
+    WS_DECOR=1
+    WS_RESIZE=2
+    RF_WINDOW=1
+    #Core extensions
+    function string table:index(What:table) {
+        foreach(Key,Value:table=This) {
+            if(Value==What) {
+                return Key
+            }
+        }
+    }
+    #Class Rect
+    function table newRect(Pos:vector2, Size:vector2) {
+        RetT=table()
+        RetT["Pos", vector2]=Pos
+        RetT["Size", vector2]=Size
+        return RetT
+    }
+    function table newRectBR(Pos:vector2, BottomRight:vector2) {
+        return newRect(Pos, BottomRight-Pos)
+    }
+    function vector2 table:rcPos() {
+        return This["Pos", vector2]
+    }
+    function vector2 table:rcSize() {
+        return This["Size", vector2]
+    }
+    function vector2 table:rcTopLeft() {
+        return This:rcPos()
+    }
+    function vector2 table:rcBottomRight() {
+        return This:rcPos()+This:rcSize()
+    }
+    function number table:rcLeft() {
+        return This:rcPos():x()
+    }
+    function number table:rcRight() {
+        return This:rcBottomRight():x()
+    }
+    function number table:rcTop() {
+        return This:rcPos():y()
+    }
+    function number table:rcBottom() {
+        return This:rcBottomRight():y()
+    }
+    function number table:rcWidth() {
+        return This:rcSize():x()
+    }
+    function number table:rcHeight() {
+        return This:rcSize():y()
+    }
+    function vector2 table:rcTopRight() {
+        return vec2(This:rcRight(), This:rcTop())
+    }
+    function vector2 table:rcBottomLeft() {
+        return vec2(This:rcLeft(), This:rcBottom())
+    }
+    function number table:rcTest(Point:vector2) {
+        return inrange(Point, This:rcTopLeft(), This:rcBottomRight())
+    }
+    #Class Screen
+    function table newScreen(EGP:wirelink) {
+        EGP:egpDrawTopLeft(1)
+        RetT=table()
+        RetT["EGP", wirelink]=EGP
+        RetT["Windows", table]=table()
+        RetT["NextIndex", number]=1
+        return RetT
+    }
+    #Getters
+    function wirelink table:scEGP() {
+        return This["EGP", wirelink]
+    }
+    function table table:scWindows() {
+        return This["Windows", table]
+    }
+    function number table:scNextIndex() {
+        Ret=This["NextIndex", number]
+        This["NextIndex", number]=This["NextIndex", number]+1
+        return Ret
+    }
+    #Window management
+    function void table:scAddWindow(Window:table) {
+        This:scWindows():pushTable(Window)
+    }
+    function void table:scRemoveWindow(Window:table) {
+        This:scWindows():removeTable(This:scWindows():index(Window))
+    }
+    function void table:scRaiseWindow(Window:table) {
+        This:scRemoveWindow(Window)
+        This:scAddWindow(Window)
+    }
+    #Screen management
+    #forward function void table:scRender()
+    #Class Window
+    function table newWindow(Rect:table) {
+        RetT=table()
+        RetT["Rect", table]=Rect
+        RetT["Indexes", table]=table()
+        RetT["Hits", table]=table()
+        RetT["Children", table]=table()
+        RetT["Title", string]="Untitled"
+        RetT["Style", number]=WS_DECOR+WS_RESIZE
+        return RetT
+    }
+    #Getters
+    function table table:wnRect() {
+        return This["Rect", table]
+    }
+    function table table:wnIndexes() {
+        return This["Indexes", table]
+    }
+    function table table:wnHits() {
+        return This["Hits", table]
+    }
+    function table table:wnChildren() {
+        return This["Children", table]
+    }
+    function string table:wnTitle() {
+        return This["Title", string]
+    }
+    function number table:wnStyle() {
+        return This["Style", number]
+    }
+    #Window children
+    function void table:wnAddChild(Child:table) {
+        This:wnChildren():pushTable(Child)
+    }
+    function void table:wnRemoveChild(Child:table) {
+        This:wnChildren():removeTable(This:wnChildren():index(Child))
+    }
+    function void table:wnRaiseChild(Child:table) {
+        This:wnRemoveChild(Child)
+        This:wnAddChild(Child)
+    }
+    #Title
+    function void table:wnSetTitle(Title:string) {
+        This["Title", string]=Title
+    }
+    #Style
+    function void table:wnSetStyle(Style) {
+        This["Style", number]=Style
+    }
+    #Indexing
+    function number table:wnAllocIndex(Screen:table, Name:string) {
+        Index=Screen:scNextIndex()
+        Indexes=This:wnIndexes()
+        Indexes[Name, number]=Index
+        return Index
+    }
+    function number table:wnGetIndex(Name:string) {
+        return This:wnIndexes()[Name, number]
+    }
+    #Hits
+    function void table:wnSetHit(Name:string, Rect:table) {
+        Hits=This:wnHits()
+        Hits[Name, table]=Rect
+    }
+    #Queries
+    function number table:wnMainIndex() {
+        return This:wnGetIndex("Client")
+    }
+    function number table:wnRenderFunc() {
+        return RF_WINDOW
+    }
+    #Miniclass Hit
+    function table newHit(Window:table, Hit:string) {
+        RetT=table()
+        RetT["Window", table]=Window
+        RetT["Hit", string]=Hit
+        return RetT
+    }
+    function table table:htWindow() {
+        return This["Window", table]
+    }
+    function string table:htHit() {
+        return This["Hit", string]
+    }
+    function table table:wnHit(Point:vector2) {
+        for(I=1,This:wnChildren():count()) {
+            Child=This:wnChildren()[I, table]
+            ResT=Child:wnHit(Point-This:wnRect():rcPos())
+            if(ResT) {
+                return ResT
+            }
+        }
+        foreach(Name,Rect:table=This:wnHits()) {
+            if(Rect:rcTest(Point)) {
+                return newHit(This, Name)
+            }
+        }
+        return table() #Necessary?
+    }
+    #Rendering
+    function void table:wnRender(Screen:table, Parent:table) {
+        WinIdx=This:wnAllocIndex(Screen, "Client")
+        EGP=Screen:scEGP()
+        print("wnRender: Screen: "+Screen:toString())
+        print("wnRender: Have EGP XWL:"+EGP:entity():toString())
+        EGP:egpBox(WinIdx, This:wnRect():rcPos(), This:wnRect():rcSize())
+        EGP:egpColor(WinIdx, vec4(255, 255, 255, 255))
+        if(Parent) {
+            EGP:egpParent(WinIdx, Parent:wnMainIndex())
+        }
+        if(bAnd(This:wnStyle(), WS_DECOR)) {
+            TitleBarIdx=This:wnAllocIndex(Screen, "TitleBar")
+            EGP:egpBox(TitleBarIdx, vec2(0, 0), vec2(This:wnRect():rcWidth(), 20))
+            EGP:egpColor(TitleBarIdx, vec4(0, 0, 127, 255))
+            EGP:egpParent(TitleBarIdx, WinIdx)
+            TitleIdx=This:wnAllocIndex(Screen, "Title")
+            EGP:egpTextLayout(TitleIdx, This:wnTitle(), vec2(0, 0), vec2(This:wnRect():rcWidth(), 20))
+            EGP:egpColor(TitleIdx, vec4(255, 255, 255, 255))
+            EGP:egpParent(TitleIdx, WinIdx)
+            This:wnSetHit("TitleBar", newRect(This:wnRect():rcPos(), vec2(This:wnRect():rcWidth(), 20)))
+            This:wnSetHit("Client", newRect(This:wnRect():rcPos()+vec2(0, 20), This:wnRect():rcSize()-vec2(0, 20)))
+        } else {
+            This:wnSetHit("Client", This:wnRect())
+        }
+        Me=This
+        for(I=1,This:wnChildren():count()) {
+            Child=This:wnChildren()[I, table]
+            Res=Child:wnRenderFunc()
+            if(Res==RF_WINDOW) {
+                Child:wnRender(Screen, Me)
+            }
+        }
+    }
+    function void table:scClear() {
+        This:scEGP():egpClear()
+    }
+    function void table:scRender() {
+        This:scClear()
+        Me=This
+        for(I=1,This:scWindows():count()) {
+            Window=This:scWindows()[I, table]
+            Res=Window:wnRenderFunc()
+            if(Res==RF_WINDOW) {
+                Window:wnRender(Me, Parent)
+            }
+        }
+    }
+    #Render dispatch
+    function void renderWindow(Window:table, Screen:table, Parent:table) {
+        Res=Window:wnRenderFunc()
+        if(Res==RF_WINDOW) {
+            Window:wnRender(Screen, Parent)
+        }
+    }
+    dsJoinGroup("DSAPI")
+    dsJoinGroup("DSAPI.EGP")
+    dsSetScope(2)
+    dsSend("DSAPI.Announce", "DSAPI", 2, array("DSAPI.EGP"))
+    GlobalScreen=newScreen(LocalEGP)
+}
+
+if(dsClk("DSAPI.EGP.Test")) {
+    Window=newWindow(newRect(vec2(100, 200), vec2(300, 200)))
+    Window:wnSetTitle("Ohai!")
+    GlobalScreen:scAddWindow(Window)
+    GlobalScreen:scRender()
+}
+
+if(dsClk("DSAPI.EGP.Clear")) {
+    GlobalScreen:scClear()
+}
+
+if(dsClk("DSAPI.EGP.Dump")) {
+    dsSendDirect("R.DSAPI.EGP.Dump", dsGetSender(), GlobalScreen)
+}
+

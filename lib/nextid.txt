@@ -1,0 +1,10 @@
+@name libNextID
+@persist NextID
+
+NextID = 1
+
+function number nextID() {
+    local ID = NextID
+    NextID += 1
+    return ID
+}

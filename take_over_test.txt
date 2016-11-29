@@ -1,0 +1,46 @@
+@name Take Over Test
+@persist Owner:entity Props:array
+@persist Attack
+
+if( first() ) {
+    runOnTick(1)
+    Owner = owner()
+}
+
+Count = Props:count()
+
+AttackLast = Attack
+Weapon = Owner:weapon():type() == "weapon_crowbar"
+Attack = Owner:keyAttack1()
+if( Weapon & Attack & !AttackLast ) {
+    E = Owner:aimEntity()
+    
+    if( E:type() == "prop_physics" & Count < 5 ) {
+        Found = 0
+        for( I = 1, I < Count ) {
+            if( Props[I, entity] == E ) {
+                Found = 1
+                break
+            }
+        }
+        if( !Found ) {
+            Owner:soundPlay( 0, 0, "ambient/tones/elev1.wav" )
+            Props:pushEntity( E )
+        }
+    }
+}
+
+if (tickClk()) {
+    Cur=curtime()
+    Radius=max(Count*50/pi()/2,100)
+    Pos=owner():pos() + vec( 0, 0, 75 )
+    Orbit1=vec(Radius/3,0,10):rotate(0,Cur*90,0)
+    
+    Index = 1
+    while( Index <= Count ) {
+        TE=Props[Index,entity]
+        Orbit2=vec(Radius,0,10):rotate(0,-(360/Count*Index + Cur*45),0)
+        TE:applyForce(((Pos+Orbit1+Orbit2-TE:massCenter())*10-TE:vel())*TE:mass())
+        Index++
+    }
+}

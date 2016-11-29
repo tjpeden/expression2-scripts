@@ -1,0 +1,23 @@
+@name Class City Scanner
+@persist 
+@model models/props_lab/workspace003.mdl
+
+Class = gTable( "CityScanner" )
+Class:clear()
+
+Class["CityScanner.new", function] = function(MyScanner:entity) {
+    Scanner = table()
+    
+    Scanner["MyScanner", entity] = MyScanner
+    
+    Scanner["fly", function] = function(Self:table, Pos) {
+        MyScanner = Self["MyScanner", entity]
+        MyScanner:applyForce( ( ( Pos - MyScanner:massCenter() ) * 10 - MyScanner:vel() ) * MyScanner:mass() )
+    }
+    
+    Scanner["orbit", function] = function(Self:table, Target:entity) {
+        
+    }
+    
+    return Scanner
+}

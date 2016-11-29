@@ -1,0 +1,80 @@
+@name Guard Pet
+@inputs 
+@outputs Health Class:string
+@persist Pet:entity Target:entity
+@trigger all
+
+Yes=1,No=!Yes
+
+if( first() ) {
+    findIncludeClass( "player" )
+    findIncludeClass( "npc_*" )
+    findExcludePlayer( owner() )
+}
+
+if( !Pet ) {
+    Num = findByClass( "npc_*" )
+    print( "Found " + Num + " NPCs" )
+    
+    if( Num > 0 ) {
+        Pet = findClosest( owner():pos() )
+        Pet:npcRelationship( "player", "hate", 999 )
+        Pet:npcRelationship( "npc_*", "hate", 999 )
+        Pet:npcRelationship( owner(), "like", 999 )
+        
+        timer( "FindFoe", 2000 )
+    }
+    
+    interval( 5000 )
+}
+
+if( clk( "FindFoe" ) ) {
+    if( !Target ) {
+        Num = findInSphere( owner():pos(), 1000 )
+        
+        if( Num > 1 ) {
+            Target = find()
+            if( Target == Pet ) {
+                Target = findResult(2)
+            }
+            print( "Pet found target of type: " + Target:type() )
+        }
+    }
+    
+    timer( "FindFoe", 2000 )
+}
+
+if( Pet ) {
+    interval( 1500 )
+    
+    Health = Pet:health()
+    OwnerPos = owner():pos()
+    
+    if( Target ) {
+        Class = Target:type()
+        
+        Diff = Target:pos() - Pet:pos()
+        MoveTo = Target:pos() - Diff:normalized() * 100
+        
+        if( Diff:length() > 120 ) {
+            Pet:npcGoRun( MoveTo )
+        } else {
+            #Pet:npcFace( Diff:normalized() )
+            
+            if( Pet:weapon() ) {
+                Pet:npcShoot()
+            } else {
+                Pet:npcAttack()
+            }
+        }
+    } else {
+        Diff = OwnerPos - Pet:pos()
+        MoveTo = OwnerPos - Diff:normalized() * 200
+        
+        if( Diff:length() > 300 ) {
+            Pet:npcGoRun( MoveTo )
+        } else {
+            Pet:npcStop()
+        }
+    }
+}

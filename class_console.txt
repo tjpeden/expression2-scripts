@@ -1,0 +1,70 @@
+@name Class Console
+@model models/props_lab/workspace003.mdl
+
+Class = gTable( "Console", 1 )
+
+Class:clear() # Make sure we can redefine everything
+
+# Define class methods (naming is up to you)
+Class["Console.new", function] = function(Screen:wirelink) {
+    Console = table()
+    
+    # Member variables
+    Console["Screen", wirelink] = Screen
+    
+    Screen[2041]=1
+    Screen[2043]=0.5
+    Screen[2046]=1
+    Screen[2045]=0
+    Screen[2036]=0
+    
+    # Instance Methods
+    Console["printColor", function] = function(Self:table, Text:string, Color) {
+        Screen = Self["Screen", wirelink]
+        
+        Lines = int( Text:length() / 30 ) + 1
+        
+        Screen[2038] = Lines
+        
+        for( I = 1, Lines ) {
+            Line = Text:sub( 1 + ( (I-1) * 30 ), I * 30 )
+            Line = Line + " ":repeat( 30 - Line:length() )
+            
+            Screen:writeString( Line, 0, 16 - (Lines - I), Color )
+        }
+        
+        Screen[2047]  = 1
+    }
+    
+    Console["print", function] = function(Self:table, Text:string) {
+        Self["printColor", function](Self, Text, 999 ) # Replace with constant
+    }
+    
+    Console["printBuffer", function] = function(Self:table, Text:string) {
+        Screen = Self["Screen", wirelink]
+        
+        Line = "$ " + Text:right(28)
+        X = Line:length()
+        Line = Line + " ":repeat( 30 - Line:length() )
+        
+        
+        Self["setCursor", function](Self, X, 17)
+        Screen:writeString( Line, 0, 17, 99 )
+    }
+    
+    Console["setCursor", function] = function(Self:table, X, Y) {
+        Screen = Self["Screen", wirelink]
+        
+        Screen[2046] = 1
+        Screen[2045] = ( Y * 30 + X ) * 2
+    }
+    
+    Console["clear", function] = function(Self:table) {
+        Screen = Self["Screen", wirelink]
+        Screen[2041] = 1
+    }
+    
+    return Console
+}
+
+dsSend( "Console", "OOP", 0 )

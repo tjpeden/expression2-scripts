@@ -1,0 +1,21 @@
+@name Flower
+@outputs Position
+@persist Position Primary
+@persist O:entity
+
+if( first() ) {
+    runOnTick(1)
+    dsJoinGroup( "Hydro" )
+    O = owner()
+    
+    Position = 0
+}
+
+Weapon = O:weapon():type() == "weapon_crowbar"
+PrimaryLast = Primary
+Primary = O:keyAttack1()
+
+if( Weapon & Primary & !PrimaryLast ) {
+    Position = ( Position ? 0 : 100 )
+    dsSend( "Move", "Hydro", Position )
+}

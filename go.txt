@@ -1,0 +1,112 @@
+@name Go!
+@inputs V:wirelink Light:wirelink
+@persist Base:entity
+@persist LightEnabled
+
+if(first() | dupefinished()) {
+    runOnTick(1)
+    rangerReset()
+}
+
+if(!->V) { exit() }
+
+if(!Base) {
+    Base = entity():isWeldedTo()
+    Base:setMass(1000)
+    Base:setColor(vec(30,25,25), 192)
+    entity():setColor(vec(0,128,0), 192)
+    V:entity():setAlpha(128)
+    
+    Base["Height", number] = 25
+    Base["BaseThrust",  number] = 2000
+    
+    function void entity:update(Key:string, Value) {
+        This["$"+Key, number] = Value - This[Key, number]
+        This[Key, number] = Value
+    }
+    
+    function void entity:update(Key:string, Pod:wirelink) {
+        This:update(Key, Pod[Key, number])
+    }
+    
+    function number entity:hasRisen(Key:string) {
+        return This["$"+Key, number] == 1
+    }
+    
+    function number entity:hasFallen(Key:string) {
+        return This["$"+Key, number] == -1
+    }
+    
+    function number entity:altitude() {
+        rangerFlags("WEZ")
+        rangerFilter(This)
+        local RDF = rangerOffset(99999, This:pos() + This:right() * -48, -This:up())
+        local RDB = rangerOffset(99999, This:pos() + This:right() * 48,  -This:up())
+        return min(RDF:distance(), RDB:distance())
+    }
+    
+    function void entity:upRight(Target:angle) {
+        local Pos = This:pos()
+    
+        local TarQ = quat(Target)
+        local CurQ = quat(This)
+        
+        local Q = TarQ/CurQ
+        local V = This:toLocal( rotationVector( Q ) + Pos )
+        This:applyTorque( ( 150 * V - 12 * This:angVelVector() ) * This:inertia() )
+    }
+    
+    function void entity:hover(Direction, Drift, Jump) {
+        This["Thrust", number] = This["BaseThrust", number] #+ (200 - This["Height", number]) * 20
+        local Diff = This["Height", number] - This:altitude()
+        local InAir = (Diff < 0)
+        
+        if(Jump & !InAir) {
+            This["Jump", number] = 1
+            timer("StopJump", 200)
+        }
+        
+        local Gravity = (This["Jump", number] ? -100000 : 14000)
+        
+        local Coo = (This:right() * This["Thrust", number] * !InAir * Direction - This:vel()):setZ(0) * (100 - InAir * 95 - Drift * !InAir * 80)
+        This:update("CooZ", Diff * 7000 * !InAir)
+        
+        This:applyForce( Coo + vec(0,0,This["CooZ", number]) + vec(0,0,This["$CooZ", number]) * 5 + vec(0,0,-Gravity) )
+    }
+}
+
+if(clk("StopJump")) { Base["Jump", number] = 0 }
+
+if(tickClk()) {
+    Base:update("PrevWeapon", V)
+    Base:update("NextWeapon", V)
+    Base:update("Active", V)
+    Base:update("Light", V)
+    
+    if(Base:hasRisen("PrevWeapon")) {
+        Base["Height", number] = min(Base["Height", number] + 25, 200)
+    }
+    
+    if(Base:hasRisen("NextWeapon")) {
+        Base["Height", number] = max(Base["Height", number] - 25, 25 )
+    }
+    
+    if(Base:hasRisen("Light")) { LightEnabled = !LightEnabled }
+    
+    if(Base:hasRisen("Active")) {
+        Base:soundPlay(2, 0, "/items/samurai/tf_samurai_noisemaker_setb_01.wav")
+    } elseif(Base:hasFallen("Active")) {
+        Base:soundPlay(2, 0, "/items/samurai/tf_samurai_noisemaker_setb_02.wav")
+    }
+    
+    TA = ang(0, Base:angles():yaw(), 0)
+    if(Base["Active", number]) {
+        TA += ang(0, (V["A", number] - V["D", number]) * (1 - V["S", number] * 2) * 10, 0)
+    }
+    
+    Base:upRight(TA)
+    Base:hover(V["W", number] - V["S", number], V["Shift", number], V["Space", number])
+    
+    Light["RGB", vector] = (LightEnabled ? vec(0,0,64) : vec(0,0,0))
+    Light["GlowSize", number] = 5000
+}

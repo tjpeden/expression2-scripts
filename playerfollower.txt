@@ -1,0 +1,123 @@
+@name PlayerFollower
+@inputs
+@outputs Active Position:vector Angles:angle Target:entity
+@persist Mode:string Location:vector
+@trigger 
+
+interval(10)
+if(first()|duped()) {
+    runOnChat(1)
+    dsJoinGroup("PF_API")
+    dsSetScope(2)
+}
+
+if(Target|Location) {
+    Active=1
+    if(Mode=="through") {
+        Position=Target:pos()+vec(0, 0, Target:height())
+        if(Target:isPlayer()) {
+            Angles=Target:eyeAngles() #Makes for smoother player tracking
+        } else {
+            Angles=Target:angles()
+        }
+    } elseif(Mode=="behind") {
+        if(Target:isPlayer()) {
+            Angles=Target:eyeAngles() #Ditto
+        } else {
+            Angles=Target:angles()
+        }
+        ReqPos=Target:pos()+(Target:eyeAngles():forward()*-200+Target:eyeAngles():up()*(50+Target:height()))
+        rangerHitEntities(1)
+        rangerFilter(Target)
+        RD=rangerOffset(Target:pos()+vec(0, 0, Target:height()), ReqPos)
+        if(RD:hit()) {
+            Position=RD:position()
+        } else {
+            Position=ReqPos
+        }
+    } elseif(Mode=="manual") {
+        Position=Location
+        gSetVec("Loc", Location)
+        if(Target) {
+            Angles=(Target:pos()-Location):toAngle()
+        } else {
+            Angles=owner():eyeAngles()
+        }
+        if(owner():keyAttack1()) {
+            Location=Location+Angles:forward()*100
+        }
+        if(owner():keyAttack2()) {
+            Location=Location+Angles:forward()*5
+        }
+    } elseif(Mode=="freecam") {
+        Position=Target:pos()+vec(0, 0, Target:height())
+        Angles=owner():eyeAngles()
+    }
+} else {
+    Active=0
+}
+
+if(dsClk()) {
+    print("Autosetting target")
+    Target=dsGetEntity()
+    if(!Mode) {
+        Mode="behind"
+    }
+}
+
+if(chatClk()) {
+    Data=owner():lastSaid():explode(" ")
+    if(Data[1, string]=="!through") {
+        hideChat(1)
+        if(Data[2, string]) {
+            Target=findPlayerByName(Data[2, string])
+            Mode="through"
+        } else {
+            Target=owner():aimEntity()
+            Mode="through"
+        }
+    } elseif(Data[1, string]=="!behind") {
+        hideChat(1)
+        if(Data[2, string]) {
+            Target=findPlayerByName(Data[2, string])
+            Mode="behind"
+        } else {
+            Target=owner():aimEntity()
+            Mode="behind"
+        }
+    } elseif(Data[1, string]=="!manual") {
+        hideChat(1)
+        if(!Data[2, string]) {
+            Mode="manual" #Forget the location, leave it alone
+            Target=noentity()
+        } elseif(Data[2, string]=="self") {
+            Location=owner():pos()+vec(0, 0, owner():height())
+            Mode="manual"
+        } else {
+            Location=vec(Data[2, string]:toNumber(10), Data[3, string]:toNumber(10), Data[4, string]:toNumber(10))
+            Mode="manual"
+        }
+    } elseif(Data[1, string]=="!notarg") {
+        hideChat(1)
+        Target=noentity()
+    } elseif(Data[1, string]=="!reset") {
+        hideChat(1)
+        Target=noentity()
+        Location=vec(0, 0, 0)
+    } elseif(Data[1, string]=="!settarg") {
+        hideChat(1)
+        if(Data[2, string]) {
+            Target=findPlayerByName(Data[2, string])
+        } else {
+            Target=owner():aimEntity()
+        }
+    } elseif(Data[1, string]=="!freecam") {
+        hideChat(1)
+        Mode="freecam"
+    } elseif(Data[1, string]=="!sendloc") {
+        hideChat(1)
+        dsSend("Go", "PF_API", Location)
+        Target=noentity()
+        Location=vec(0, 0, 0)
+    }
+}        

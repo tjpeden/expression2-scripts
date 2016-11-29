@@ -1,0 +1,72 @@
+@name Epic SWEP
+@persist Owner:entity Target:entity Props:table
+@persist Epic:table
+@persist Strength
+
+if( first() ) {
+    runOnTick(1)
+    
+    #include "lib/custom_swep"
+    
+    function initialize() {
+        Strength = 1000
+        Owner = owner()
+        
+        Epic = newSWEP("weapon_physcannon", "")
+        Epic:swepOn("Use", "esGrab")
+        Epic:swepOn("Reload", "esReset")
+        Epic:swepOn("Attack1", "esKill")
+    }
+    
+    function table:orbit(Position:vector) {
+        local Count = This:count()
+        local Cur = curtime()
+        local Radius = max( Count * 50 / pi() / 2, 100 )
+        local Orbit1 = vec( Radius / 3, 0, 10 ):rotate( 0, Cur * 90, 0 )
+        
+        for( I = 1, Count ) {
+            local E = Props[I, entity]
+            local Orbit2 = vec( Radius, 0, 10 ):rotate( 0, -( 360 / Count * I + Cur * 45 ), 0 )
+            E:applyForce( ( ( Position + Orbit1 + Orbit2 - E:massCenter() ) * 10 - E:vel() ) * E:mass() )
+        }
+    }
+    
+    function esGrab() {
+        print("grab")
+        local E = Owner:aimEntity()
+        if( E:type() == "prop_physics" & Props:count() < 5 & !Props:contains(E) ) {
+            Owner:soundPlay(0, 0, "ambient/tones/elev1.wav")
+            E:setMass(1000)
+            Props:pushEntity(E)
+        }
+    }
+    
+    function esKill() {
+        print("kill")
+        local E = ( Target:isAlive() ? Target : Owner:aimEntity() )
+        if( E:isAlive() ) {
+            Target = E
+            local Position = Target:pos() + vec(0, 0, Target:height() / 2)
+            for( I = 1, Props:count() ) {
+                local Prop = Props[I, entity]
+                Prop:applyForce(Strength * Prop:mass() * (Position - Prop:pos()))
+            }
+        }
+    }
+    
+    function esReset() {
+        Props:clear()
+    }
+    
+    function think() {
+        Epic:swepThink()
+        if( !Target:isAlive() ) {
+            local Position = Owner:pos() + vec( 0, 0, 200 )
+            Props:orbit(Position)
+        }
+    }
+    
+    initialize()
+}
+
+think()

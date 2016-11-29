@@ -1,0 +1,38 @@
+@name 
+@inputs Ship:entity On
+@outputs 
+@persist 
+#@trigger all
+
+# 2009-04-10: Vector:setX/setY/setZ and Angle:setPitch/setYaw/setRoll
+#             has changed behavior, some of your dupes may break (no errors)!
+#             Read the changelog to see how to fix your contraption!
+
+# Documentation and examples available at:
+# http://wiki.garrysmod.com/wiki/?title=Wire_Expression2
+# The community is available at http://www.wiremod.com
+
+runOnTick(1)
+
+if( !On )
+{
+    exit()
+}
+
+Extras = Ship:getConstraints()
+
+Extras
+
+ShipAng=(Ship:angles()*20+Ship:angVel())
+ShipPos=Ship:pos()
+ShipRight=Ship:right()
+ShipForward=Ship:forward()
+ShipUp=Ship:up()
+Ship:applyForce((vec(0,0,9.015)-Ship:vel())*Ship:mass())
+Lev=sqrt((Ship:inertia():length()^2)/3)
+Ship:applyOffsetForce( ShipUp*ShipAng:pitch()  ,ShipPos+ShipForward*Lev)
+Ship:applyOffsetForce(-ShipUp*ShipAng:pitch()  ,ShipPos-ShipForward*Lev)
+Ship:applyOffsetForce( ShipRight*ShipAng:yaw() ,ShipPos+ShipForward*Lev)
+Ship:applyOffsetForce(-ShipRight*ShipAng:yaw() ,ShipPos-ShipForward*Lev)
+Ship:applyOffsetForce( ShipUp*ShipAng:roll()   ,ShipPos+ShipRight*Lev)
+Ship:applyOffsetForce(-ShipUp*ShipAng:roll()   ,ShipPos-ShipRight*Lev)

@@ -1,0 +1,26 @@
+@name Setup Screen Controller
+@inputs Screen:wirelink Typing:string
+@outputs 
+@persist Buffer:array Index
+@trigger Typing
+
+interval( 50 )
+
+if( ~Typing ) {
+    Screen:setNumber( "Reset", 0 )
+    Typing = Typing + "|"
+    Buffer = Typing:explode( "~" )
+    Index = 1
+}
+
+if( Index <= Buffer:count() ) {
+    Text = Buffer:string( Index )
+    Pad = ( 30 - Text:length() ) / 2
+    
+    Text = " ":repeat( Pad ) + Text
+    
+    Screen:writeString( Text, 0, Index - 1, 90 )
+    Index++
+}
+
+

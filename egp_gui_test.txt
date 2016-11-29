@@ -1,0 +1,233 @@
+@name EGP GUI Test
+@inputs User:entity LocalEGP:wirelink
+@outputs Ops
+@persist [Owner Self]:entity App:table Info:gtable
+
+if(first()) { runOnTick(1) }
+if(!->E) { exit() }
+if(!Self) { Self = E:entity() }
+
+if( first() ) { # For performance
+    Owner = owner()
+    Info = gTable("EGP.GUI")
+    
+    function number nextID() {
+        ID = Info["NextID", number]
+        Info["NextID", number] = ID + 1
+        return ID
+    }
+    #[  Core extensions   ]#
+    function string table:index(What:table) {
+        foreach(Key,Value:table=This) {
+            if(Value==What) {
+                return Key
+            }
+        }
+    }
+    function normal entity:lookingAt(Other:entity) {
+        return This:aimEntity() == Other
+    }
+    
+    #[  Control methods   ]#
+    function normal table:ctHitTest(Cursor:vector2) {
+        if( !This:exists("TopLeft") ) {
+            ContainerID = This["ContainerID", number]
+            EGP         = This["EGP", wirelink]
+            TopLeft     = EGP:egpPos(ContainerID)
+            
+            This["TopLeft", vector2]     = TopLeft
+            This["BottomRight", vector2] = TopLeft + EGP:egpSize(ContainerID)
+        }
+        return inrange(Cursor, This["TopLeft", vector2], This["BottomRight", vector2])
+    }
+    
+    function void table:ctSetColor(Object:string, Color:string) {
+        This["EGP", wirelink]:egpColor(This[Object, number], This[Color, vector])
+    }
+    
+    function void table:ctHighlight() {
+        This:ctSetColor("ContainerID", "HighlightColor")
+    }
+    
+    function void table:ctUnhighlight() {
+        This:ctSetColor("ContainerID", "BorderColor")
+    }
+    
+    function void table:ctClicked() {
+        dsSendDirect(This["Type", string]+".Clicked", entity(), This)
+    }
+    
+    #[  CheckBox methods    ]#
+    function void table:cbUpdateCheck() {
+        This:ctSetColor("CheckID", (This["Checked", number] ? "CheckedColor" : "UncheckedColor"))
+    }
+    
+    function void table:cbToggle() {
+        This["Checked", number] = !This["Checked", number]
+        This:cbUpdateCheck()
+    }
+    
+    #[  App Constructor   ]#
+    function table newApp(EGP:wirelink) {
+        T = table()
+        
+        T["Controls", table] = table()
+        T["NextID", number]  = 1
+        
+    
+    #[  Control Constructor  ]#
+    function table newControl(Type:string, IDs:array) {
+        Control = table()
+        
+        Control["Type", string]  = Type
+        Control["EGP", wirelink] = E
+        
+        Control["BorderColor", vector]    = vec(255, 255, 255)
+        Control["LabelColor", vector]     = vec(0,   128, 255)
+        Control["HighlightColor", vector] = vec(0,   0,   255)
+        
+        LControls:pushTable(Control)
+        return Control
+    }
+    
+    #[  Button Constructor  ]#
+    function table newButton(Text:string, Position:vector2, Width) {
+        Button = newControl("Button")
+        
+        ContainerID = nextID()
+        LabelID     = nextID()
+        
+        
+        E:egpRoundedBoxOutline(ContainerID, Position, vec2(Width,30))
+        E:egpText(LabelID, Text, vec2(0,0))
+        E:egpAlign(LabelID, 1, 1)
+        E:egpParent(LabelID, ContainerID)
+        
+        # Save defaults to "object"
+        Button["ContainerID", number]    = ContainerID
+        Button["LabelID", number]        = LabelID
+        Button["Text", string]           = Text
+        
+        Button:ctSetColor("ContainerID", "BorderColor")
+        Button:ctSetColor("LabelID", "LabelColor")
+        
+        return Button
+    }
+    
+    #[  CheckBox Constructor    ]#
+    function table newCheckBox(Text:string, Position:vector2, Checked) {
+        CheckBox = newControl("CheckBox")
+        
+        ContainerID = nextID()
+        LabelID     = nextID()
+        CheckID     = nextID()
+        
+        E:egpBoxOutline(ContainerID, Position, vec2(30, 30))
+        E:egpBox(CheckID, vec2(-10,-10), vec2(20,20))
+        E:egpText(LabelID, Text, vec2(30, 0))
+        E:egpAlign(LabelID, 0, 1)
+        E:egpParent(CheckID, ContainerID)
+        E:egpParent(LabelID, ContainerID)
+        
+        CheckBox["ContainerID", number] = ContainerID
+        CheckBox["LabelID", number]     = LabelID
+        CheckBox["CheckID", number]     = CheckID
+        CheckBox["Text", string]        = Text
+        CheckBox["Checked", number]     = Checked
+        
+        CheckBox["CheckedColor", vector]   = vec(0,   255, 0  )
+        CheckBox["UncheckedColor", vector] = vec(0,   0,   0  )
+        
+        CheckBox:ctSetColor("ContainerID", "BorderColor")
+        CheckBox:ctSetColor("LabelID", "LabelColor")
+        CheckBox:cbUpdateCheck()
+        
+        return CheckBox
+    }
+    
+    #[  Window Constructor  ]#
+    function void newWindow(Title:string) {
+        TitleID = nextID()
+        E:egpText(TitleID, Title, vec2(256,0))
+        E:egpColor(TitleID, vec(0, 0, 255))
+        E:egpAlign(TitleID, 1)
+        E:egpSize(TitleID, 30)
+        
+        BorderID = nextID()
+        E:egpLine(BorderID, vec2(0,30), vec2(512,30))
+        E:egpColor(BorderID, vec(255,0,0))
+    }
+    
+    #[  Cursor Constructor  ]#
+    function void newCursor() {
+        CursorID = nextID()
+        
+        E:egpCircle(CursorID, vec2(0,0), vec2(2,2))
+        E:egpColor(CursorID, vec(255, 0, 0))
+        E:egpParentToCursor(CursorID)
+    }
+    
+    LocalEGP:egpClear()
+    LocalEGP:egpDrawTopLeft(1)
+    
+    newWindow("EGP GUI Test")
+    
+    #[
+        This is a rather contrived example,
+        the players table will become stale
+        as soon as a player joins or disconnects
+    ]#
+    findByClass("player")
+    Players = findToArray()
+    
+    for(I = 1, Players:count()) {
+        Player = Players[I, entity]
+        
+        N = I - 1
+        X = (N / 16) * 256
+        Y = 32 + N * 32
+        
+        CheckBox = newCheckBox(Player:name():left(20), vec2(X,Y), Player["Allowed", number])
+        CheckBox["Player", entity] = Player
+    }
+    
+    newCursor()
+}
+
+if( dsClk("CheckBox.Clicked") ) {
+    CheckBox = dsGetTable()
+    CheckBox:cbToggle()
+    
+    Player = CheckBox["Player", entity]
+    Player["Allowed", number] = CheckBox["Checked", number]
+    exit()
+}
+
+# Check for and act on hover events
+if( Owner:lookingAt(Self) ) {
+    Cursor = E:egpCursor(Owner)
+    
+    for(I = 1, LControls:count()) {
+        Control = LControls[I, table]
+        if(Control:ctHitTest(Cursor)) {
+            Control:ctHighlight()
+        } else {
+            Control:ctUnhighlight()
+        }
+    }
+}
+
+# Check for and act on player use key events
+if( ~User & User & User == Owner ) {
+    Cursor = E:egpCursor(Owner)
+    
+    for(I = 1, LControls:count()) {
+        Control = LControls[I, table]
+        if( Control:ctHitTest(Cursor) ) {
+            Control:ctClicked()
+            break
+        }
+    }
+}
+
+Ops = opcounter()

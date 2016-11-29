@@ -1,0 +1,44 @@
+@name Asgard Beam Controller
+@inputs Beam:wirelink
+@outputs Self:entity Target:entity Position:vector
+@persist Self:entity Target:entity Position:vector
+@persist Threshold Alive
+
+if( first() ) {
+    runOnTick(1)
+    
+    Threshold = 5000
+    
+    findExcludeEntity( owner() )
+}
+
+if( !Self ) {
+    if( ->Beam ) {
+        Self = Beam:entity()
+        Position = Self:pos()
+        
+        Beam["Active", number] = 1
+    }
+}
+
+if( Self & tickClk() ) {
+    if( !Target & findCanQuery() ) {
+        findByClass( "npc_*" )
+        N = findClipToSphere( Position, Threshold )
+        
+        if( N > 0 ) {
+            Target = findClosest( Position )
+        }
+    }
+    
+    AliveLast = Alive
+    Alive = !!Target:id()
+    
+    if( Target ) {
+        Beam["Entity", entity] = Target
+    }
+    
+    if( Alive != AliveLast ) {
+        Beam["Fire", number] = Alive
+    }
+}

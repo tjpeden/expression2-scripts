@@ -1,0 +1,17 @@
+@name Gate Dialer
+@inputs Address:array Gate:wirelink
+@persist Temp:array
+
+#interval( 1000 )
+runOnTick(1)
+
+if( first() ) { Gate["Dial Mode", number] = 1 }
+
+if( ~Address ) {
+    Temp = Address:clone()
+}
+
+if( Address:count() > 0 ) {
+    Gate["Dial Address", number] = Temp:shiftNumber()
+    Temp = Temp:clone()
+}

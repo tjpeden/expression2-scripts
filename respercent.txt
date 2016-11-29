@@ -1,0 +1,8 @@
+@name Res Percent
+@inputs Current Max
+@outputs Percent
+@persist 
+@trigger all
+
+Frac = Current/Max
+Percent = floor( Frac * 100 )

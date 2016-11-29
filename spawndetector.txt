@@ -1,0 +1,20 @@
+@name SpawnDetector
+@persist EntityLast:entity LastCount
+interval(50)
+
+#Gmod_Wire_Expression2
+#Prop_Physics
+#Prop_Ragdoll
+Find = "Prop_Physics"
+
+Count = findByClass(Find)
+EntityFind = findToArray():entity(Count)
+Name = EntityFind:owner():name()
+
+if (EntityFind != EntityLast) {
+    if (Count > LastCount) {hint(Name + " has Spawned a " + Find,100)}
+    EntityLast = EntityFind
+    LastCount = Count
+}
+
+

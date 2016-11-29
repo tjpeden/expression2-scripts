@@ -1,0 +1,9 @@
+@name Entity Radius
+@outputs Radius
+@persist Self:entity
+@model models/Cerus/Modbridge/Misc/Accessories/acc_ant2_red.mdl
+
+if( first() ) {
+    Self = entity():isWeldedTo()
+    Radius = Self:radius()
+}

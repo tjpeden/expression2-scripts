@@ -1,0 +1,19 @@
+@name 
+@inputs Memory
+@outputs ASCII
+@persist 
+@trigger all
+
+if( ~Memory ) {
+    if( Memory >= 128 & Memory <= 137 ) {
+        Memory -= 80
+    }
+    
+    if( Memory == 138 ) { Memory = 0 }
+    if( Memory == 139 ) { Memory = 0 }
+    if( Memory == 140 ) { Memory = 0 }
+    if( Memory == 141 ) { Memory = 0 }
+    if( Memory == 143 ) { Memory = 0 }
+    
+    ASCII = Memory
+}

@@ -1,0 +1,14 @@
+@name Person Class Test
+
+Person = gTable( "Person", 1 )
+
+NewPerson = Person["NewPerson", function]
+PrintPerson = Person["PrintPerson", function]
+
+P = NewPerson("TJ", 23)[table]
+
+PrintPerson(P)
+
+P["Birthday", function](P)
+
+PrintPerson(P)

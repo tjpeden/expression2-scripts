@@ -1,0 +1,12 @@
+@name Tool Test
+@persist Trigger
+runOnTick(1)
+
+Owner = owner()
+TriggerLast = Trigger
+Trigger = Owner:keyAttack1()
+Weapon = Owner:weapon():type()
+
+if( Trigger & !TriggerLast ) {
+    print( Weapon )
+}

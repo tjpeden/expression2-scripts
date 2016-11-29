@@ -1,0 +1,8 @@
+@name Constants
+@persist [Blue Green Red Teal Cyan]:vector
+
+Blue = vec(0, 0, 255)
+Green = vec(0, 255, 0)
+Red = vec(255, 0, 0)
+Teal = vec(0, 127, 127)
+Cyan = vec(0, 255, 255)

@@ -1,0 +1,34 @@
+@name Player Info
+@persist [Owner Player]:entity
+
+if( first() | duped() ) {
+    #include "lib/constants"
+    Owner = owner()
+}
+
+interval(100)
+
+E = Owner:aimEntity()
+if( E:isPlayer() ) {
+    Player = E
+    timer("reset",3500)
+}
+
+if( Player ) {
+    TeamColor = teamColor(Player:team())
+    printColor(_HUD_PRINTCENTER,
+        Teal, "Name: ",
+        TeamColor, Player:name(),
+        Teal, "\nHP/AP: ",
+        Green, Player:health() + "/" + Player:armor(),
+        Teal, "\nWeapon: ",
+        Red, Player:weapon():type(),
+        Teal, "\nDistance: ",
+        Red, round(toUnit("ft", Player:pos():distance(Owner:pos())), 1) + "ft"
+    )
+}
+
+if( clk("reset") ) {
+    Player=noentity()
+    print(_HUD_PRINTCENTER,"")
+}

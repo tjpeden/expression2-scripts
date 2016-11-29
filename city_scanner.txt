@@ -1,0 +1,13 @@
+@name City Scanner
+@inputs 
+@outputs 
+@persist Self:entity Owner:entity
+@model models/Combine_Scanner.mdl
+
+if( first() ) {
+    runOnTick(1)
+    Self = entity()
+    Owner = owner()
+}
+
+

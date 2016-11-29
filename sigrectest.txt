@@ -1,0 +1,16 @@
+@name Signal Rec Test
+@inputs 
+@outputs 
+@persist 
+@trigger all
+
+signalSetGroup( "test" )
+
+if( first() ) {
+    runOnSignal( "testing", 0 )
+    print( "Rec Group: " + signalGetGroup() )
+}
+
+if( signalClk( "test", "testing", 0 ) ) {
+    print( "Signal received." )
+}

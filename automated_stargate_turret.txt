@@ -1,0 +1,45 @@
+@name Automated Stargate Turret
+@inputs Turret:wirelink
+@outputs Self:entity Target:entity Position:vector
+@persist Self:entity Target:entity Position:vector
+@persist Threshold Alive
+@model models/beer/wiremod/hydraulic.mdl
+
+if( first() ) {
+    runOnTick(1)
+    
+    Threshold = 5000
+    
+    findExcludeEntity( owner() )
+}
+
+if( !Self ) {
+    if( ->Turret ) {
+        Self = Turret:entity()
+        Position = Self:pos()
+        
+        Turret["Active", number] = 1
+    }
+}
+
+if( Self & tickClk() ) {
+    if( !Target & findCanQuery() ) {
+        findByClass( "npc_*" )
+        N = findClipToSphere( Position, Threshold )
+        
+        if( N > 0 ) {
+            Target = findClosest( Position )
+        }
+    }
+    
+    if( Target ) {
+        Turret["Entity", entity] = Target
+    }
+    
+    AliveLast = Alive
+    Alive = Target:isAlive()
+    
+    if( Alive != AliveLast ) {
+        Turret["Fire", number] = Alive
+    }
+}

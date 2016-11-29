@@ -1,0 +1,41 @@
+@name Intruder Remover
+@inputs Power Gun:wirelink
+@outputs Num On
+@persist Target:entity TargetAquired On
+@trigger all
+
+Yes=1,No=!Yes
+
+if( ~Power & Power ) {
+    On = !On
+    runOnTick( On )
+}
+
+if( !On ) {
+    Gun:setNumber( "Fire", No )
+    TargetAquired = No
+    exit()
+}
+
+if( TargetAquired & !Target:isAlive() ) {
+    Gun:setNumber( "Fire", No )
+    TargetAquired = No
+}
+
+if( !TargetAquired ) {
+    findInSphere( entity():pos(), 1000 )
+    Num = findClipToClass( "npc_*" )
+    
+    if( Num > 0 ) {
+        Target = findClosest( entity():pos() )
+        Gun:setNumber( "Fire", Yes )
+        TargetAquired = Yes
+    }
+}
+
+if( TargetAquired ) {
+    Gun:setNumber( "X", Target:pos():x() )
+    Gun:setNumber( "Y", Target:pos():y() )
+    Gun:setNumber( "Z", Target:pos():z() )
+}
+

@@ -1,0 +1,88 @@
+@name libMapReduce
+
+function table newController(Name:string, Action:string) {
+    local T = table()
+    
+    T["workers", table]  = table()
+    T["ready",   table]  = table()
+    T["name",    string] = Name
+    T["action",  string] = Action
+    T["counter", number] = 0
+    
+    dsJoinGroup(Name)
+    
+    return T
+}
+
+function string table:getName()    { return This["name",    string] }
+function table  table:getReady()   { return This["ready",   table]  }
+function table  table:getWorkers() { return This["workers", table]  }
+function number table:getCounter() { return This["counter", number] }
+
+function table:resetCounter() {
+    This["counter", number] = 0
+}
+
+function table:readyWorker(ID:string) {
+    This["ready", table][ID, number] = 1
+}
+
+function table:addWorker(Worker:entity) {
+    local ID = Worker:id():toString()
+    This["workers", table][ID, entity] = Worker
+    This:readyWorker(ID)
+}
+
+function entity table:nextWorker() {
+    local Workers = This:getWorkers()
+    foreach( ID, Worker:entity = Workers ) {
+        if( This["ready", table][ID, number] ) {
+            This["ready", table][ID, number] = 0
+            return Worker
+        }
+    }
+    return noentity()
+}
+
+function normal table:delegate(Work:table) {
+    local Worker = This:nextWorker()
+    if( Worker ) {
+        dsSendDirect("worker.work", Worker, Work)
+        return 1
+    }
+    return 0
+}
+
+function table:masterThink() {
+    if( dsClk("worker.add") ) {
+        This:addWorker(dsGetSender())
+    }
+    if( dsClk("worker.finished") ) {
+        This["action", string](This, dsGetTable())
+        This["counter", number] = This:getCounter() + 1
+        This:readyWorker(dsGetSender():id():toString())
+        exit()
+    }
+}
+
+function table newWorker(Name:string, Action:string) {
+    local T = table()
+    
+    T["name", string] = Name
+    T["action", string] = Action
+    
+    dsSend("worker.add", Name, "")
+    
+    return T
+}
+
+function table:workerThink() {
+    if( dsClk("worker.work") ) {
+        This["action", string](This, dsGetTable())
+    }
+}
+
+function table:finishWork(Result:table) {
+    local Name = This["name", string]
+    dsSend("worker.finished", Name, Result)
+}

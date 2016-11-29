@@ -1,0 +1,45 @@
+@name Elevator Go Up!
+@persist E:entity
+@persist Mass X Y Base State StopZ
+
+if( first() ) {
+    runOnTick(1)
+    Self = entity()
+    E = Self:isWeldedTo()
+    
+    E:setMass( 50000 )
+    E:setMaterial( "phoenix_storms/iron_rails" )
+    
+    Mass = E:mass()
+    
+    Position = E:pos()
+    X = Position:x()
+    Y = Position:y()
+    
+    rangerFilter( E )
+    Ground = rangerOffset( Position, vec( 0, 0, -1 ) ):position()
+    Base = Ground:z()
+    
+    State = 0
+    
+    dsSend( "Bind.Use", "DSS.Events", 1 )
+}
+
+Z = ( !State ? StopZ : E:pos():z() )
+
+if( dsClk( "Use.Triggered" ) ) {
+    T = dsGetTable()
+    
+    if( T["aim_entity", entity] == E ) {
+        if( State ) { State = !State, StopZ = Z }
+        elseif( Z - Base <= 2 ) { State = 2 }
+        else { State = 1 }
+    }
+}
+
+if( State == 1 & Z - Base <= 2 ) { State = !State, StopZ = Z }
+
+if( State == 2 ) { Z += 5 }
+elseif( State == 1 ) { Z -= 5 }
+
+E:applyForce( ( ( vec( X, Y, Z ) - E:massCenter() ) * 10 - E:vel() ) * Mass )

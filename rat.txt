@@ -1,0 +1,10 @@
+@name Rat
+@inputs InUse User:entity
+@outputs 
+@persist 
+@trigger all
+
+if( ~InUse & InUse ) {
+    Name = User:name()
+    print( Name + " is attempting to contact another dimension" )
+}

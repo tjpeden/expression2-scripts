@@ -1,0 +1,12 @@
+@name 
+@inputs Pod:wirelink
+@outputs IsVehicle IsOnGround IsUnderWater Loc:string
+
+interval( 20 )
+
+Chair = Pod:entity( "Entity" )
+
+IsVehicle = Chair:isVehicle()
+IsOnGround = Chair:isOnGround()
+IsUnderWater = Chair:isUnderWater()
+Loc = Chair:pos():toString()

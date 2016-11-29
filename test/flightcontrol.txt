@@ -1,0 +1,16 @@
+@name Flight Control
+@inputs W A S D Space Shift Active
+@outputs PThrust RThrust ZThrust
+@persist 
+@trigger all
+
+interval( 100 )
+
+Mul = 25
+
+if( W | S ) { PThrust += ( W - S ) * Mul }
+else { PThrust = 0 }
+if( A | D ) { RThrust += ( A - D ) * Mul }
+else { RThrust = 0 }
+if( Space ) { ZThrust += Mul }
+else { ZThrust = 0 }

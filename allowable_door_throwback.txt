@@ -1,0 +1,18 @@
+@name Allowable Door Throwback
+@inputs Button
+@outputs Open
+@persist O:entity DP:vector Threshold
+
+if( first() | duped() ) {
+    runOnTick(1)
+    Door = entity():isConstrainedTo()
+    DP = Door:pos() - vec( 0, 0, 50 )
+    
+    Threshold = 35
+    
+    O = owner()
+}
+
+OP = O:pos()
+
+Open = ( OP:distance( DP ) < Threshold | Button )

@@ -1,0 +1,76 @@
+@name Allowable Editor
+@inputs Key InUse User:entity Screen:wirelink
+@outputs Kick
+@persist O:entity Players:array Console:table
+@persist NumPlayers P Cursor
+@model models/props/pc_case02/pc_case02.mdl
+
+if( first() ) {
+    Class = gTable( "Console" )
+    Console = Class["Console.new", function](Screen)[table]
+}
+
+if( clk( "Render" ) | first() | duped() ) {
+    Screen[2041] = 1
+    for( I = 0, 17 ) {
+        Player = Players[P + I, entity]
+        Name = Player:name()
+        Access = Player["Allowed", number]
+        Screen:writeString( Name, 0, I, (Access ? 90 : 900) )
+    }
+    
+    timer( "Render", InUse ? 20 : 200 )
+}
+
+if( first() | duped() ) {
+    O = owner()
+    P = 1
+    
+    Screen[2043] = 0.3
+    Screen[2044] = 0.2
+    
+    dsSend( "AllPlayers", "LibCommon", table() )
+    exit()
+}
+
+function PrintPlayers() {
+    print( "Players:" )
+    for( I = 1, NumPlayers ) {
+        Player = Players[I, entity]
+        print( "  " + Player:name() )
+    }
+}
+
+if( dsClk( "ReturnAllPlayers" ) ) {
+    Players = dsGetGeneric()[array]
+    NumPlayers = Players:count()
+    timer( "GetPlayers", 10000 )
+    exit()
+}
+
+if( clk( "GetPlayers" ) ) {
+    dsSend( "AllPlayers", "LibCommon", table() )
+    exit()
+}
+
+# if( InUse & ~InUse & User != O ) { Kick = 1 } else { Kick = 0 }
+
+Screen[2045] = ( Cursor * 30 ) * 2
+if( Key & ~Key ) {
+    if( Key == 17 | Key == 115 ) {
+        if( Cursor == 0 & P > 1 ) { P -= 1 }
+        else { Cursor = max( Cursor-1, 0 ) }
+    }
+    if( Key == 18 | Key == 119 ) {
+        L = min( 17, NumPlayers-1 )
+        if( Cursor == 17 & P < NumPlayers ) { P += 1 }
+        else { Cursor = min( Cursor + 1, L ) }
+    }
+    if( Key == 13 | Key == 32 ) {
+        I = P + Cursor
+        Player = Players[I, entity]
+        Player["Allowed", number] = !Player["Allowed", number]
+    }
+}
+
+Screen[2046] = InUse

@@ -1,0 +1,50 @@
+@name Common Functions
+@persist Library:table
+@model models/props_lab/servers.mdl
+
+if( first() ) {
+    dsJoinGroup( "LibCommon" )
+    dsSetScope(1)
+    
+    function table allPlayers( Void:table ) {
+        T = table()
+        
+        findByClass("player")
+        T["Result", array] = findToArray()
+        return T
+    }
+    
+    function table positionBehind( Params:table ) {
+        T = table()
+        Target = Params["Target", entity]
+        
+        ReqPos = Target:pos() + ( Target:eyeAngles():forward() * -200 + Target:eyeAngles():up() * ( 50 + Target:height() ) )
+        
+        rangerHitEntities(1)
+        rangerFilter(Target)
+        
+        RD = rangerOffset( Target:pos() + vec(0, 0, Target:height()), ReqPos )
+        
+        if( RD:hit() ) {
+            T["Result", vector] = RD:position()
+        } else {
+            T["Result", vector] = ReqPos
+        }
+        
+        return T
+    }
+}
+
+if( dsClk() ) {
+    Function = dsClkName()
+    Params = dsGetTable()
+    Chip = dsGetSender()
+    
+    if( Function == "AllPlayers" ) {
+        Result = allPlayers( Params )
+    } elseif( Function == "PositionBehind" ) {
+        Result = positionBehind( Params )
+    }
+    
+    dsSendDirect( Function + ".Return", Chip, Result )
+}

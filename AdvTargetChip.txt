@@ -1,0 +1,54 @@
+@name Advanced Targeting Controller
+@inputs 
+@outputs Shield X Y Z
+@persist Loc:vector
+
+Yes = 1, No = !Yes
+
+signalSetGroup( "AdvTargetChip" )
+
+if( first() ) {
+    runOnChat(Yes)
+    runOnTick(Yes)
+}
+
+if( chatClk() ) {
+    Said = lastSaid():trim():lower()
+    Comms = Said:explode(" ")
+    
+    if( Comms:count() == 0 ) { exit() }
+    
+    if( Comms:string(1) == "!shield" & lastSpoke() == owner() ) {
+        Shield = !Shield
+    }
+    
+    if( Comms:string(1) == "kill" ) {
+        if( Comms:count() == 2 ) {
+            TargetName = Comms:string(2)
+            
+            Target = findPlayerByName(TargetName)
+            if( Target ) {
+                if( Target == owner() ) {
+                    print( owner():name() + " pwns you!" )
+                    Target = lastSpoke()
+                }
+                
+                Loc = Target:pos()
+            }
+        } else {
+            Target = owner():aimEntity()
+            
+            if( Target ) {
+                Loc = Target:pos()
+            } else {
+                Loc = owner():aimPos()
+            }
+        }
+        
+        gSetNum( "X", Loc:x() ), X = Loc:x()
+        gSetNum( "Y", Loc:y() ), Y = Loc:y()
+        gSetNum( "Z", Loc:z() ), Z = Loc:z()
+        
+        signalSend( "UpdateTarget", 0 )
+    }
+}

@@ -1,0 +1,15 @@
+@name Name Lazer
+@inputs 
+@outputs T:vector J:vector Activate
+@persist Owner:entity
+@trigger 
+
+if( first() ) {
+    runOnTick(1)
+    Owner = entity()
+    Activate = 1
+}
+
+P = Owner:pos()
+O = (Owner:forward() * 10) + (Owner:up() * 20)
+T = P + O

@@ -1,0 +1,13 @@
+@name Turn on Sign
+@inputs Clk
+@outputs 
+@persist 
+@trigger Clk
+
+E = owner():aimEntity()
+
+if( ~Clk & Clk & E ) {
+    gSetGroup( "TJ.SIGN" )
+    gSetNum( E:name(), 1 )
+    print( E:name() + "'s sign is now on!" )
+}

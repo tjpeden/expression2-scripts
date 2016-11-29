@@ -1,0 +1,7 @@
+@name Signal Destruct
+
+if( first() ) {
+    runOnTick(1)
+}
+
+if( !owner() ) { dsSend( "Owner Left", "Sensitive Code", 0, 0 ) }

@@ -1,0 +1,82 @@
+@name Editor
+@inputs Key InUse User:entity Screen:wirelink
+@outputs Kick
+@persist Owner:entity Text:array G:gtable
+@persist Row E
+@model models/props/pc_case02/pc_case02.mdl
+
+interval(1)
+
+if( first() | duped() ) {
+    Owner = owner()
+    G = gTable( "Editor" )
+    G["Text", array] = array()
+    Row = 0
+    Screen[2043] = 0.3
+    Screen[2044] = 0.2
+}
+
+if( User & User != Owner ) { Kick = 1 }
+else { Kick = 0 }
+
+if( InUse ) {
+    Screen[2046] = 1
+    
+    if( ~InUse ) {
+        entity():soundPlay( 0, 0, "ambient/tones/elev1.wav" )
+        Text = G["Text", array]
+    }
+    
+    W = Owner:weapon():type() == "weapon_physgun"
+    EL = E
+    E = Owner:keyUse()
+    
+    if( W & E & E!=EL ) { if( Owner:aimEntity() == User ) { Kick = 1 } }
+    
+    if( Key & ~Key ) {
+        if( Key == 17 ) { Row = max( Row - 1, 0 ) }
+        if( Key == 18 | Key == 13 ) { Row = min( Row + 1, 17 ) }
+        
+        Line = Text[Row, string]
+        
+        if( Key == 127 ) { Line = Line:left( Line:length() - 1 ) }
+        
+        if( Line:length() == 0 & Key == 8 ) {
+            # Not sure what to do here yet
+        }
+        
+        if( Key == 138 ) { Key = 47 }
+        if( Key == 139 ) { Key = 42 }
+        if( Key == 140 ) { Key = 45 }
+        if( Key == 141 ) { Key = 43 }
+        if( Key == 143 ) { Key = 46 }
+        
+        if( inrange( Key, 128, 137 ) ) { Key -= 80 }
+        
+        if( Line:length() < 30 & inrange( Key, 32, 126 ) ) { Line += toChar( Key ) }
+        
+        Text[Row, string] = Line
+    } else { Key = -1 }
+    
+    for( I = 0, 17 ) {
+        Line = Text[I, string]
+        Line += " ":repeat( 30 - Line:length() )
+        Screen:writeString( Line, 0, I )
+    }
+    
+    X = Text[Row, string]:length()
+    if( X == 30 ) { Screen[2046] = 0 }
+    else { Screen[2045] = ( Row * 30 + X ) * 2 }
+} elseif( ~InUse ) {
+    entity():soundPlay( 0, 0, "ambient/tones/elev1.wav" )
+    
+    Screen[2041] = 1
+    G["Text", array] = Text
+    signalSetGroup( "Editor" )
+    signalSend( "Update", 0 )
+}
+
+if( !InUse ) {
+    Screen[2046] = 0
+    if( Kick ) { Kick = !Kick }
+}

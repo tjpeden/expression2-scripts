@@ -1,0 +1,47 @@
+@name Keyboard Input Controller
+@inputs Memory User:entity InUse
+@outputs Typing:string
+@persist Typing:string Name:string
+@trigger all
+
+Max = 30 * 18
+
+if( ~InUse & InUse ) {
+    Name = User:name()
+    gSetGroup( "TJ.SIGN" )
+    gSetNum( Name, ( User == owner() ) )
+    Typing = gGetStr( Name )
+}
+
+if( ~InUse & !InUse ) {
+    if( Typing:length() > 0 ) {
+        gSetGroup( "TJ.SIGN" )
+        gSetStr( Name, Typing )
+        Typing = ""
+    }
+}
+
+if( InUse & ~Memory ) {
+    if( Typing:length() == Max | Memory == 13 ) {
+        Typing += "~"
+    }
+    
+    if( Typing:length() > 0 & Memory == 127 ) {
+        Typing = Typing:left( Typing:length() - 1 )
+    }
+    
+    if( Memory >= 128 & Memory <= 137 ) {
+        Memory -= 80
+    }
+    
+    if( Memory == 138 ) { Memory = 47 }
+    if( Memory == 139 ) { Memory = 42 }
+    if( Memory == 140 ) { Memory = 45 }
+    if( Memory == 141 ) { Memory = 43 }
+    if( Memory == 143 ) { Memory = 46 }
+    
+    if( Memory >= 32 & Memory < 127 & Typing:length() < Max ) {
+        if( Memory == 126 ) { exit() }
+        Typing += toChar( Memory )
+    }
+}

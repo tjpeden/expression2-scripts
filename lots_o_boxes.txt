@@ -1,0 +1,16 @@
+@name Lots O Boxes
+@model models/props_junk/wood_crate001a.mdl
+
+function void table:write(Str:string) {
+    This:unshiftString(Str)
+}
+
+Name = "Boxes"
+Script = table()
+
+Script:write("password")
+Script:write("say Hello, ladies!")
+
+Global = gTable(Name)
+Global[Name, table] = Script
+selfDestruct()

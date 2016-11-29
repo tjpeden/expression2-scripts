@@ -1,0 +1,18 @@
+@name Global Functions Test
+@outputs Sound
+@persist Library:gtable Owner:entity
+@model models/props/radio_reference.mdl
+
+if( first() ) {
+    runOnTick(1)
+    
+    Library = gTable( "PlayerAPI" )
+    UsingWith2 = Library["UsingWith", function]
+    Owner = owner()
+    Sound = 1
+}
+
+Sound = UsingWith2( Owner, "weapon_physgun" )[number]
+if( Sound ) {
+    print( "UsingWith" )
+}

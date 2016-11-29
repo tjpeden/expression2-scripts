@@ -1,0 +1,16 @@
+@name Serial String Reconstructor
+@inputs Char New
+@outputs Text:string
+@persist Buffer:array
+#@trigger all
+
+EOS = 10 # End of String Constant
+
+if( ~New ) {
+    if( Char == EOS ) {
+        Text = Buffer:concat()
+        Buffer = array()
+    } else {
+        Buffer:pushString( toChar( Char ) )
+    }
+}

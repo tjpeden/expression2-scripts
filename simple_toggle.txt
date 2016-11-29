@@ -1,0 +1,9 @@
+@name On/Off Toggle
+@inputs Clk
+@outputs Power
+@persist Power
+@trigger all
+
+if( ~Clk & Clk ) {
+    Power = !Power
+}

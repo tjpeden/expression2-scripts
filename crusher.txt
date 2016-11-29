@@ -1,0 +1,34 @@
+@name Crusher
+@persist Target:entity Active
+@persist Trigger Retrigger
+runOnTick(1)
+
+Owner = owner()
+TriggerLast = Trigger
+Trigger = Owner:keyAttack1()
+RetriggerLast = Retrigger
+Retrigger = Owner:keyAttack2()
+Weapon = Owner:weapon():type()
+
+if( Trigger & !TriggerLast & Weapon == "weapon_crowbar" ) {
+    Target = Owner:aimEntity()
+    if( Target & Target:isAlive() ) {
+        Active = 1
+    } else {
+        Target = noentity()
+    }
+} elseif( Active & findCanQuery() ) {
+    Pos = Target:pos()
+    findInSphere( Pos, 8000 )
+    findClipToClass("prop_physics")
+    PropArray = findToArray()
+    for( I=1, PropArray:count() )
+    {
+        Prop = PropArray[I, entity]
+        Prop:applyForce( Prop:mass() * 500 * ( Pos - Prop:pos() ) )
+    }
+    Active = 0
+}
+
+#I_am_Einstein's Crusher
+# Enhanced by TJP

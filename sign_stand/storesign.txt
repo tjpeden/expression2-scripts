@@ -1,0 +1,34 @@
+@name Store Sign
+@inputs Screen:wirelink
+@outputs 
+@persist Buffer:array Index Name:string
+@trigger Typing
+
+interval( 50 )
+
+Timer = "TextCheck"
+
+if( first() ) {
+    Name = entity():isConstrainedTo():owner():name()
+}
+
+if( first() | clk( Timer ) ) {
+    gSetGroup( "TJ.SIGN" )
+    
+    Text = gGetStr( Name )
+    Buffer = Text:explode( "~" )
+    Screen:setNumber( "Reset", 0 )
+    
+    Index = 1
+    timer( Timer, 15000 )
+}
+
+if( Index <= Buffer:count() ) {
+    Line = Buffer:string( Index )
+    Pad = ( 30 - Line:length() ) / 2
+    
+    Line = " ":repeat( Pad ) + Line
+    
+    Screen:writeString( Line, 0, Index - 1, 90 )
+    Index++
+}

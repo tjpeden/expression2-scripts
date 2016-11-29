@@ -1,0 +1,115 @@
+@name Magical Turtle GOLD EDITION 
+@outputs Light:vector
+@persist Frozen TC:vector Hue
+@model models/props/de_tides/Vending_turtle.mdl
+E = entity()
+#made by Insidiea, Inspired by UberLord
+runOnChat(1)
+
+if( first() | duped())
+{
+
+runOnTick( 1 )
+
+entity():setMaterial("models/debug/debugwhite")
+
+
+
+
+print("Hello, My name is Magical Turtle LIMITED GOLD EDITION, Plesure to meet you, For a list of commands, say !help")
+
+E:soundPlay(1,0,"music/hl1_song25_remix3.mp3")
+}
+
+
+#Security Part
+OS = owner():steamID()
+Ins = "STEAM_0:0:14912221" 
+Client = "STEAM_0:0:19664077" 
+
+if (OS == Client | OS == Ins) {} else {print("You have not purchased Magical Turtle") selfDestruct()}
+#--------------------------------------------------------------
+
+
+if( Hue < 360 ) { Hue += 2 } else { Hue = 0 }
+EC = ( hsv2rgb( vec( Hue, 1, 1 ) ) )
+entity():setColor(EC)
+
+if(chatClk(owner()) & owner():lastSaid():lower() == "!help"  ) {print("/destruct Destroys me, /stealth Makes me stealth :D, /stealth off makes me visible, /play Plays a random song out of 10, /org Plays a orgasm sound")}
+
+
+#Self Destruct part
+if(chatClk(owner()) & owner():lastSaid():lower() == "/destruct"  )
+{selfDestruct() print("You made me die you  :C" )}
+#--------------------------------------------------------------
+
+
+
+#Stealth mode part
+if(chatClk(owner()) & owner():lastSaid():lower() == "/stealth"  )
+{hideChat(1)  entity():setColor(255,255,255,0) print("Stealth Mode has been activated")}
+if(chatClk(owner()) & owner():lastSaid():lower() == "/stealth off"  )
+{hideChat(1) print("Stealth mode Deactivated") entity():setColor(238,173,14,255) }
+#--------------------------------------------------------------
+
+
+#Music part
+if(chatClk(owner()) & owner():lastSaid():lower() == "/play"  ) {X = randint(1,20),hideChat(1)}
+if( X == 1) {E:soundPlay(1,0,"music/vlvx_song22.mp3")}
+if( X == 2) {E:soundPlay(1,0,"music/vlvx_song24.mp3")}
+if( X == 3) {E:soundPlay(1,0,"music/vlvx_song4.mp3")}
+if( X == 4) {E:soundPlay(1,0,"music/vlvx_song9.mp3")}
+if( X == 5) {E:soundPlay(1,0,"music/vlvx_song23.mp3")}
+if( X == 6) {E:soundPlay(1,0,"music/vlvx_song25.mp3")}
+if( X == 7) {E:soundPlay(1,0,"music/vlvx_song18.mp3")}
+if( X == 8) {E:soundPlay(1,0,"music/vlvx_song21.mp3")}
+if( X == 9) {E:soundPlay(1,0,"music/vlvx_song26.mp3")}
+if( X == 10) {E:soundPlay(1,0,"music/vlvx_song28.mp3")}
+if( X == 11) {E:soundPlay(1,0,"music/hl1_song25_remix3.mp3")}
+if( X == 12) {E:soundPlay(1,0,"music/hl1_song20.mp3")}
+if( X == 13) {E:soundPlay(1,0,"music/hl2_song12_long.mp3")}
+if( X == 14) {E:soundPlay(1,0,"music/hl2_song14.mp3")}
+if( X == 15) {E:soundPlay(1,0,"music/hl2_song16.mp3")}
+if( X == 16) {E:soundPlay(1,0,"music/hl2_song20_submix0.mp3")}
+if( X == 17) {E:soundPlay(1,0,"music/hl2_song20_submix4.mp3")}
+if( X == 18) {E:soundPlay(1,0,"music/hl2_song23_suitsong3.mp3")}
+if( X == 19) {E:soundPlay(1,0,"music/hl2_song29.mp3")}
+if( X == 20) {E:soundPlay(1,0,"music/hl2_song31.mp3")}
+#---------------------------------------------------------------
+
+
+#applyforce section
+
+entity():setMass(1)
+A = owner():pos() + vec(0,0,150)
+    entity():applyForce(((A - entity():pos()) * 1) *
+ entity():mass()
+)
+
+#--------------------------------------------------------------
+
+
+
+#orgasm part
+if(chatClk(owner()) & owner():lastSaid():lower() == "/org"  ) {Org = randint(1,10),hideChat(1)}
+if(Org == 1) {entity():soundPlay(0,0,"vo/npc/alyx/uggh02.wav")}
+if(Org == 2) {entity():soundPlay(0,0,"vo/npc/alyx/brutal02.wav")}
+if(Org == 3) {entity():soundPlay(0,0,"vo/npc/alyx/gasp02.wav")}
+if(Org == 4) {entity():soundPlay(0,0,"vo/npc/alyx/gasp03.wav")}
+if(Org == 5) {entity():soundPlay(0,0,"vo/npc/alyx/hurt08.wav")}
+if(Org == 6) {entity():soundPlay(0,0,"vo/npc/alyx/hurt06.wav")}
+if(Org == 7) {entity():soundPlay(0,0,"vo/npc/alyx/hurt06.wav")}
+if(Org == 8) {entity():soundPlay(0,0,"vo/npc/alyx/hurt04.wav")}
+if(Org == 9) {entity():soundPlay(0,0,"vo/npc/alyx/ohgod01.wav")}
+if(Org == 10) {entity():soundPlay(0,0,"vo/npc/alyx/uggh01.wav")}
+
+
+
+#--------------------------------------------------------------
+
+#Trail Part 
+
+TC = vec(255,185,15)
+
+if (first()) {interval(500) entity():setTrails(30,15,4,"trails/laser",TC,255)}
+#--------------------------------------------------------------

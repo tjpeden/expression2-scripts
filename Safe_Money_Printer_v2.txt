@@ -1,0 +1,121 @@
+@name Safe Money Printer v2
+@inputs 
+@outputs Length Fire Grab
+@persist Target:entity
+@persist Env:table Self:entity Angles:angle
+@persist Active MinLength MaxLength UseInterval
+@trigger 
+
+if( first() ) {
+    #include "lib/command"
+    #include "lib/entity"
+    
+    runOnChat(1)
+    runOnTick(1)
+    
+    MinLength = 25
+    MaxLength = 340
+    UseInterval = 5 * 60 * 1000 # 5 minutes
+    
+    Self = entity():isWeldedTo()
+    Angles = ang(270, Self:angles():yaw(), 0)
+    
+    function findAndWire(Class:string, Inputs:table, Outputs:table) {
+        local Self = entity()
+        findIncludeClass(Class)
+        findInSphere(Self:pos(), 100)
+        local E = find()
+        
+        if( E ) {
+            for( I=1, Inputs:count() ) {
+                Name = Inputs[I, string]
+                Self:createWire(E, Name, Name)
+            }
+            for( I=1, Outputs:count() ) {
+                Name = Outputs[I, string]
+                E:createWire(Self, Name, Name)
+            }
+        }
+        
+        exit() # I feel like this is a cleaner approach
+    }
+    
+    function smpFindPrinter(Args:table, Ret:table) {
+        local Self = entity()
+        local Color = Args:popString()
+        findByClass(Color + "_money_printer")
+        local E = findClosest(Self:pos())
+        if( E ) { print(E:toString()) } else { printColor(vec(255, 0, 0), "Not found.") }
+    }
+    
+    function smpUse() {
+        Fire = 1
+        printColor(vec(0, 0, 255), "Collecting printed money")
+        timer("smpStartUse", UseInterval)
+    }
+    
+    function smpSetMax(Args:table, Ret:table) {
+        MaxLength = Args:popNumber()
+    }
+    
+    function smpSetMin(Args:table, Ret:table) {
+        MinLength = Args:popNumber()
+    }
+    
+    function smpStart(Args:table, Ret:table) {
+        Active = 1
+        smpUse()
+    }
+    
+    function smpStop(Args:table, Ret:table) {
+        Active = 0
+        stoptimer("smpStartUse")
+    }
+    
+    Env = newEnv()
+    Env:envAddCommand(newCommand("mpfind", "smpFindPrinter", "s"))
+    Env:envAddCommand(newCommand("mpmax", "smpSetMax", "n"))
+    Env:envAddCommand(newCommand("mpmin", "smpSetMin", "n"))
+    Env:envAddCommand(newCommand("mpstart", "smpStart", ""))
+    Env:envAddCommand(newCommand("mpstop", "smpStop", ""))
+    
+    Length = MaxLength
+}
+
+#[
+if( !->Fire ) {
+    findAndWire("gmod_wire_user", table(), table("Fire"))
+}
+
+if( !->Length ) {
+    findAndWire("gmod_wire_hydraulic", table(), table("Length"))
+}
+
+if( !->Grab ) {
+    findAndWire("gmod_wire_grabber", table("Entity"), table("Grab"))
+}
+
+if( Fire ) { Fire = 0 }
+]#
+
+if( chatClk(owner()) ) {
+    if( Env:envExec(owner():lastSaid()) ) {
+        hideChat(1)
+    }
+}
+
+if( clk("smpStartUse") ) { smpUse() }
+
+if( clk("smpRelease") ) { Grab = 0 }
+
+if( tickClk() ) {
+    
+    if( Active ) {
+        Grab = 1
+        if( Length > MinLength ) { Length -= 3 }
+    } else {
+        if( Length < MaxLength ) { Length += 3 } else { timer("smpRelease", 500) }
+    }
+    
+    Self:fixAngles(Angles)
+}

@@ -1,0 +1,24 @@
+@name Tab Manager
+@inputs 
+@outputs 
+@persist Tabs:table
+@trigger 
+
+if(first()|duped()) {
+    runOnChat(1)
+    Tabs=table()
+}
+
+if(chatClk(owner())) {
+    Cmd=owner():lastSaid()
+    if(Cmd:left(2)=="T:") {
+        hideChat(1)
+        Parts=Cmd:sub(3):explode(" ")
+        if(Parts:count()==1) {
+            hint(Parts[1, string]+" has "+Tabs[Parts[1, string], number]:toString(), 5)
+        }
+        if(Parts:count()==2) {
+            Tabs[Parts[1, string], number]=Tabs[Parts[1, string], number]+Parts[2, string]:toNumber()
+        }
+    }
+}

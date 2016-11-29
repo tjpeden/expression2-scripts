@@ -1,0 +1,17 @@
+@name Shield Display
+@inputs Shld:wirelink Battery:wirelink Screen:wirelink
+if( first() ) { runOnTick(1) }
+
+SMessage = ""
+BMessage = ""
+
+if( Shld["Active", number] ) {
+    SMessage = "Shield: " + Shld["Strength", number] + "%\n"
+} else {
+    SMessage = "Sheild Deactivated\n"
+}
+
+BP = round(Battery["Energy", number] / Battery["Max Energy", number] * 100)
+BMessage += "Battery: " + BP + "%\n"
+
+Screen["String", string] = SMessage + BMessage

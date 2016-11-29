@@ -1,0 +1,38 @@
+@name Weapon Controller
+@inputs Gun:wirelink
+@outputs 
+@persist Self:entity Target:entity
+@persist Alive
+
+if( first() ) {
+    runOnTick(1)
+    
+    dsSend("Bind.Use", "DSS.Events", 2, 1)
+}
+
+if( !Self ) {
+    if( ->Gun ) {
+        Self = Gun:entity()
+        Position = Self:pos()
+        
+        Gun["Active", number] = 1
+    }
+    exit()
+}
+
+if( dsClk("Use.Triggered") ) {
+    T = dsGetTable()
+    if( T["weapon_type", string] == "weapon_crowbar" ) {
+        Target = T["aim_entity", entity]
+        Gun["Entity", entity] = Target
+    }
+}
+
+if( Self & tickClk() ) {
+    AliveLast = Alive
+    Alive = !!Target:id()
+    
+    if( Alive != AliveLast ) {
+        Gun["Fire", number] = Alive
+    }
+}

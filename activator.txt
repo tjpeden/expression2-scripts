@@ -1,0 +1,23 @@
+@name Activator
+@persist Self:entity Use
+@model models/props/switch001.mdl
+
+if( first() ) {
+    runOnTick(1)
+    Self = entity()
+}
+
+Pos = Self:pos()
+
+findByClass( "player" )
+findClipToSphere( Pos, 100 )
+E = findClosest( Pos )
+
+if( E ) {
+    Last = Use
+    Use = E:keyUse()
+    
+    if( Use & !Last & E:aimEntity() == Self ) {
+        dsSend( "Toggle", "LazerZ", 0 )
+    }
+}

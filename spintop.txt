@@ -1,0 +1,16 @@
+@name Spin Top
+@inputs 
+@outputs Found
+@persist 
+@trigger all
+
+Yes=1,No=!Yes
+
+interval( 100 )
+
+E = owner():aimEntity()
+
+if( E ) {
+    Found = Yes
+    E:applyForce( E:forward() * 100000 )
+} else { Found = No }

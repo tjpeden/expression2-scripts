@@ -1,0 +1,7 @@
+@name testdummy
+@inputs R:array
+@outputs NumCons
+@persist 
+@trigger all
+
+NumCons = R:count()

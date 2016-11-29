@@ -1,0 +1,49 @@
+@name Fleet Controller
+@inputs Fleet:array Target:entity FleetType:string
+@outputs Health
+@persist Index
+@trigger all
+
+Yes=1,No=!Yes
+
+Num = Fleet:count()
+
+if( Num > 0 ) {
+    interval( 1000/Num )
+    
+    Pet = Fleet:entity( Index + 1 )
+    Pet:setColor( 0, 0, 255 )
+    Pet:npcRelationship( "player", "hate", 998 )
+    Pet:npcRelationship( "npc_*", "hate", 998 )
+    Pet:npcRelationship( FleetType, "like", 999 )
+    Pet:npcRelationship( owner(), "like", 999 )
+    
+    Health = Pet:health()
+    
+    #if( !Pet:npcWeapon() ) {
+    #    Pet:npcGiveDexgun()
+    #    print( "Giving Alyx a gun!" )
+    #}
+    
+    if( Target ) {
+        Diff = Target:pos() - Pet:pos()
+        MoveTo = Target:pos() - Diff:normalized() * 100
+        
+        if( Diff:length() > 120 ) {
+            Pet:npcGoRun( MoveTo )
+        } else {
+            Pet:npcAttack()
+        }
+    } else {
+        Diff = owner():pos() - Pet:pos()
+        MoveTo = owner():pos() - Diff:normalized() * 250
+        
+        if( Diff:length() > 300 ) {
+            Pet:npcGoRun( MoveTo )
+        } else {
+            Pet:npcStop()
+        }
+    }
+    
+    Index = ( Index + 1 ) % Num
+} else { interval( 20 ) }

@@ -1,0 +1,26 @@
+@name Shoot Owner Target
+@inputs Gun:wirelink
+
+runOnTick(1)
+runOnChat(1)
+
+Target = owner():aimEntity()
+
+
+Gun["X", number] = Target:pos():x()
+Gun["Y", number] = Target:pos():y()
+Gun["Z", number] = Target:pos():z()
+
+if( chatClk( owner() ) ) {
+    Text = lastSaid()
+    print( "Chat triggered: " + Text )
+    if( Text == "$" ) {
+        Gun["Lock", number] = 1
+        Gun["Launch", number] = 1
+    }
+}
+
+if( !Target:isAlive() ) {
+    Gun["Lock", number] = 0
+    Gun["Launch", number] = 0
+}

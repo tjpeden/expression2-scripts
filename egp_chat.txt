@@ -1,0 +1,143 @@
+@name EGP Chat
+#@inputs E:wirelink
+@persist E:wirelink App:string
+@persist Owner:entity Self:entity Parent:entity
+@persist Buttons:table
+@persist NextID
+
+# Creates a button where the text is centered inside a Width x 30 rounded box
+function table newButton(Text:string, Position:vector2, Width) {
+    Button = table()
+    
+    ContainerID = NextID, NextID++
+    TextID      = NextID, NextID++
+    BorderColor = vec(255, 255, 255)
+    TextColor   = vec(0, 0, 200)
+    
+    
+    E:egpRoundedBoxOutline(ContainerID, Position, vec2(Width,30))
+    E:egpColor(ContainerID, BorderColor)
+    E:egpText(TextID, Text, vec2(0,0))
+    E:egpAlign(TextID, 1, 1)
+    E:egpColor(TextID, TextColor)
+    E:egpParent(TextID, ContainerID)
+    
+    TopLeft = E:egpPos(ContainerID)
+    
+    # Save defaults to "object"
+    Button["Text", string]           = Text
+    Button["ContainerID", number]    = ContainerID
+    Button["TextID", number]         = TextID
+    Button["BorderColor", vector]    = BorderColor
+    Button["TextColor", vector]      = TextColor
+    Button["HighlightColor", vector] = vec(0, 128, 255)
+    Button["EGP", wirelink]          = E
+    Button["TopLeft", vector2]       = TopLeft
+    Button["BottomRight", vector2]   = TopLeft + E:egpSize(ContainerID)
+    
+    Buttons:pushTable(Button)
+    return Button
+}
+
+function normal table:btHitTest(Cursor:vector2) {
+    return inrange(Cursor, This["TopLeft", vector2], This["BottomRight", vector2])
+}
+
+function void table:btHighlight() {
+    This["EGP", wirelink]:egpColor(This["TextID", number], This["HighlightColor", vector])
+}
+
+function void table:btUnhighlight() {
+    This["EGP", wirelink]:egpColor(This["TextID", number], This["HighlightColor", vector])
+}
+
+# Quick function for creating the cursor
+function void wirelink:egpCreateCursor(ObjectID) {
+    This:egpCircle(ObjectID, vec2(256,256), vec2(2,2))
+    This:egpParentToCursor(ObjectID)
+    This:egpColor(ObjectID, vec(255, 0, 0))
+}
+
+# Utility method on the entity class
+function normal entity:lookingAt(Other:entity) {
+    return This:aimEntity() == Other
+}
+
+if( dsClk("Halt") ) {
+    dsSend("Bind.Use", "DSS.Events", 2, 0)
+    runOnTick(0)
+    exit()
+}
+
+if( dsClk("Registered") ) {
+    E = dsGetWirelink()
+    
+    Self = E:entity()
+}
+
+if( first() ) {
+    dsJoinGroup("EGP.Portal")
+    
+    App = "Chat"
+    Owner = owner()
+    Map = table()
+}
+
+if( first() | dsClk("Update") ) {
+    dsSend("Register", "EGP.Portal", App)
+    exit()
+}
+
+if( dsClk(App) ) {
+    runOnTick(1)
+    
+    dsSend("Bind.Use", "DSS.Events", 2, 1)
+    
+    NextID = 2
+    
+    E:egpClear()
+    
+    ID = NextID, NextID++
+    E:egpText(ID, "EGP Chat", vec2(256,0))
+    E:egpColor(ID, vec(0, 0, 255))
+    E:egpAlign(ID, 1)
+    E:egpSize(ID, 30)
+    
+    ID = NextID, NextID++
+    E:egpLine(ID, vec2(0,32), vec2(512,32))
+    
+    newButton("Back", vec2(0, 0), 64)
+    
+    E:egpCreateCursor(NextID), NextID++
+}
+
+# Check for and act on hover events
+if( Owner:lookingAt(Self) ) {
+    E:egpPos(1, vec2())
+    Cursor = E:egpCursor(Owner)
+    
+    #foreach(K, Button:table = Buttons) {
+    for(I = 1, Buttons:count()) {
+        Button = Buttons[I, table]
+        if(Button:btHitTest(Cursor)) {
+            Button:btHighlight()
+        } else {
+            Button:btUnhighlight()
+        }
+    }
+}
+
+# Check for and act on player use key events
+if( dsClk("Use.Triggered") ) {
+    Cursor = E:egpCursor(Owner)
+    
+    #foreach(K, Button:table = Buttons) {
+    for(I = 1, Buttons:count()) {
+        Button = Buttons[I, table]
+        if(Button:btHitTest(Cursor)) {
+            if(Button["Text", string] == "Back") {
+                dsSendDirect("Back", Parent, entity())
+            }
+        }
+    }
+}

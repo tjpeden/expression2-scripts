@@ -1,0 +1,17 @@
+@name Accel Test
+@inputs On
+@outputs Result:string
+@persist Last Accel Data:array
+@trigger all
+
+interval( 100 )
+
+if( On ) {
+    Cur = entity():vel():length()
+    Accel = abs( Last - Cur )
+    Last = Cur
+    
+    Data:pushNumber( Accel )
+    
+    Result = "Accel: " + ( Accel * 10 ) + " Max: " + Data:max()
+}

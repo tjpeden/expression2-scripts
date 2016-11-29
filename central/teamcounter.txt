@@ -1,0 +1,36 @@
+@name Team Counter
+@inputs Team:string
+@outputs Num
+@persist Signaled
+@trigger all
+
+Yes=1,No=!Yes
+Count = "Count"
+
+if( Team:length() == 0 ) { exit() }
+
+signalSetGroup( Team )
+
+if( !Signaled ) {
+    gSetGroup( Team )
+    gSetNum( "Num", 0 )
+    
+    signalSend( Count, Yes )
+    print( "Signaled: " + Count )
+    
+    Signaled = Yes
+    
+    interval( 200 )
+    exit()
+}
+
+if( Signaled ) {
+    gSetGroup( Team )
+    
+    Num = gGetNum( "Num" )
+    print( "Players left on " + Team + ": " + Num )
+    
+    Signaled = No
+    
+    interval( 10000 )
+}

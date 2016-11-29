@@ -1,0 +1,53 @@
+@name Damage Log
+@inputs [Attacker Victim]:entity Type:string Damage
+@outputs On Entities:array
+@persist 
+@trigger all
+
+if( first() | duped() ) {
+    #include "lib/utils"
+    
+    function updatePlayers() {
+        Entities = players()
+        timer("updatePlayers", 1000 * 30) # 30 seconds
+    }
+    updatePlayers()
+    On = 1
+}
+
+if( !->Damage ) {
+    interval(250)
+    local Inputs = table():addIO("Attacker"):addIO("Victim"):addIO("Type"):addIO("Damage")
+    local Outputs = table():addIO("On"):addIO("Entities")
+    findAndWire("gmod_wire_damage_detector", Inputs, Outputs)
+}
+
+if( clk("updatePlayers") ) { updatePlayers() }
+
+if( inputClk() ) {
+    if( Attacker ) {
+        if( Attacker:isPlayer() ) {
+            AName = Attacker:name()
+            ACol = teamColor(Attacker:team())
+        } else {
+            AName = Attacker:type()+" "+Attacker:id():toString()
+            ACol = vec(0, 255, 255)
+        }
+    } else {
+        AName = "The world"
+        ACol = vec(127, 0, 255)
+    }
+    if( Victim:isAlive() ) {
+        Verb = " attacked "
+        VCol = vec(0, 127, 127)
+    } else {
+        Verb = " killed "
+        VCol = vec(255, 0, 0)
+    }
+    if( Type == "Bullet" & Attacker ) {
+        Weapon = " using "+Attacker:weapon():type()
+    } else {
+        Weapon = ""
+    }
+    printColor(vec(0, 0, 255), "[DMG] ", ACol, AName, VCol, Verb, teamColor(Victim:team()), Victim:name(), VCol, " with ", vec(0, 255, 0), floor(Damage):toString(), " ", vec(255, 255, 0), Type, VCol, " damage", Weapon)
+}

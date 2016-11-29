@@ -1,0 +1,22 @@
+@name Signal Hydro Controller
+@inputs H:wirelink
+@persist Position Length Speed
+
+interval( 200 )
+
+if( first() ) {
+    dsJoinGroup( "Hydro" )
+    Speed = 1
+    Length = Position = 0
+}
+
+if( dsClk() ) {
+    Position = dsGetNumber()
+}
+
+if( Length != Position ) {
+    D = Position - Length
+    Length += (D/abs(D))*Speed
+}
+
+H["Length", number] = Length

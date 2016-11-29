@@ -1,0 +1,22 @@
+@name CS Test
+@inputs 
+@outputs 
+@persist Self:entity Pos:vector Hold:vector
+@persist Stop
+@model models/Combine_Scanner.mdl
+
+if( first() ) {
+    runOnTick(1)
+    Self = entity()
+}
+
+PosLast = Pos
+Pos = Self:pos()
+
+StopLast = Stop
+Dist = Pos:distance( PosLast )
+
+if( Dist == 0 ) { Hold = Pos } elseif( Dist < 25 ) { Hold = Hold } else { Hold = -1 }
+
+if( Hold > )
+Self:applyForce( ( ( Hold - Self:massCenter() ) * 10 - Self:vel() ) * Self:mass() )

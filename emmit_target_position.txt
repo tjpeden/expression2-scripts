@@ -1,0 +1,23 @@
+@name Emit Target Position
+@inputs 
+@outputs Vector:vector Yes
+@persist Owner:entity Target:entity Use
+
+if( first() ) {
+    runOnTick(1)
+    Owner = owner()
+    Yes = 1
+}
+
+#Vector = Owner:aimPos()
+
+#W = Owner:weapon():type() == "weapon_physgun"
+#Last = Use
+#Use = Owner:keyUse()
+#
+#if( W & Use & !Last ) {
+#    E = Owner:aimEntity()
+#    if( E ) { Target = E }
+#}
+#
+#if( Target ) { Vector = Target:boxMin() + Target:pos() }

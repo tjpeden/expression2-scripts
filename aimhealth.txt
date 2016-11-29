@@ -1,0 +1,21 @@
+@name 
+@inputs 
+@outputs Health Class:string
+@persist Target:entity
+@trigger all
+
+Yes=1,No=!Yes
+
+if( first() ) {
+    runOnTick( Yes )
+}
+
+Target = owner():aimEntity()
+
+if( Target ) {
+    Health = Target:health()
+    Class = Target:type()
+} else {
+    Health = 0
+    Class = ""
+}

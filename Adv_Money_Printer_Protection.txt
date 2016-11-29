@@ -1,0 +1,35 @@
+@name Adv Money Printer Protection
+@inputs 
+@outputs 
+@persist Env:table Printer:entity
+@trigger 
+
+if( first() ) {
+    #include "lib/command"
+    
+    runOnChat(1)
+    
+    function entity findPrinter(Args:table, Ret:table) {
+        local Type = Args:popString()
+        local Pos = entity():pos()
+        
+        findClipToSphere(Pos, 1000)
+        findByClass(Type + "_money_printer")
+        Printer = findClosest(Pos)
+        
+        if( Printer ) {
+            printColor(vec(0, 255, 0), Printer:toString())
+        } else {
+            printColor(vec(255, 0, 0), "No " + Type + "_money_printer found.")
+        }
+    }
+    
+    Env = table()
+    Env:pushTable(newCommand("mpfind", "findPrinter", "s", ":"))
+}
+
+if( chatClk(owner()) ) {
+    if( Env:envExec(lastSaid()) ) {
+        hideChat(1)
+    }
+}

@@ -1,0 +1,159 @@
+@name DS Client
+
+if(first()|duped()) {
+    runOnChat(1)
+    dsSetScope(2)
+    function void array:setAny(Index, Generic:table) {
+        GT=Generic:typeids()["Result", string]
+        if(GT:upper()=="N") {
+            This[Index, number]=Generic["Result", number]
+        } elseif(GT:upper()=="S") {
+            This[Index, string]=Generic["Result", string]
+        } elseif(GT:upper()=="E") {
+            This[Index, entity]=Generic["Result", entity]
+        }
+    }
+    function void table:setAny(Indice:string, Generic:table) {
+        GT=Generic:typeids()["Result", string]
+        if(GT:upper()=="N") {
+            This[Indice, number]=Generic["Result", number]
+        } elseif(GT:upper()=="S") {
+            This[Indice, string]=Generic["Result", string]
+        } elseif(GT:upper()=="E") {
+            This[Indice, entity]=Generic["Result", entity]
+        } elseif(GT:upper()=="R") {
+            This[Indice, array]=Generic["Result", array]
+        } elseif(GT:upper()=="T") {
+            This[Indice, table]=Generic["Result", table]
+        }
+    }
+    function table parse(String:string) {
+        Type=String:left(1)
+        Param=String:sub(2)
+        RetT=table()
+        if(Type:upper()=="N") {
+            RetT["Result", number]=Param:toNumber()
+        } elseif(Type:upper()=="S") {
+            RetT["Result", string]=Param
+        } elseif(Type:upper()=="E") {
+            if(Param) {
+                RetT["Result", entity]=entity(Param:toNumber())
+            } else {
+                RetT["Result", entity]=owner():aimEntity()
+            }
+        } elseif(Type:upper()=="A") {
+            RetA=Param:explode(",")
+            for(I=1,RetA:count()) {
+                RetA:setAny(I, parse(RetA[I, string]))
+            }
+            RetT["Result", array]=RetA
+        } elseif(Type:upper()=="T") {
+            Entries=Param:explode(",")
+            Result=table()
+            for(I=1,Entries:count()) {
+                Entry=Entries[I, string]
+                EntArr=Entry:explode("=")
+                Key=EntArr:removeString(1)
+                Value=parse(EntArr:concat("="))
+                Result:setAny(Key, Value)
+            }
+            RetT["Result", table]=Result
+        }
+        return RetT
+    }
+    function void dsSendAny(Signal:string, Group:string, Scope, Generic:table) {
+        GT=Generic:typeids()["Result", string]
+        if(GT:upper()=="N") {
+            dsSend(Signal, Group, Scope, Generic["Result", number])
+        } elseif(GT:upper()=="S") {
+            dsSend(Signal, Group, Scope, Generic["Result", string])
+        } elseif(GT:upper()=="E") {
+            dsSend(Signal, Group, Scope, Generic["Result", entity])
+        } elseif(GT:upper()=="R") {
+            dsSend(Signal, Group, Scope, Generic["Result", array])
+        } elseif(GT:upper()=="T") {
+            dsSend(Signal, Group, Scope, Generic["Result", table])
+        }
+    }
+    function void dsSendDirectAny(Signal:string, Chip:entity, Generic:table) {
+        GT=Generic:typeids()["Result", string]
+        if(GT:upper()=="N") {
+            dsSendDirect(Signal, Chip, Generic["Result", number])
+        } elseif(GT:upper()=="S") {
+            dsSendDirect(Signal, Chip, Generic["Result", string])
+        } elseif(GT:upper()=="E") {
+            dsSendDirect(Signal, Chip, Generic["Result", entity])
+        } elseif(GT:upper()=="R") {
+            dsSendDirect(Signal, Chip, Generic["Result", array])
+        } elseif(GT:upper()=="T") {
+            dsSendDirect(Signal, Chip, Generic["Result", table])
+        }
+    }
+}
+
+if(chatClk(owner())) {
+    LastSaid=owner():lastSaid()
+    if(LastSaid:left(1)=="|") {
+        LastSaid="!join "+LastSaid:sub(2)
+    }
+    if(LastSaid:left(1)=="@") {
+        LastSaid="!senddirect "+LastSaid:sub(2)
+    }
+    if(LastSaid:left(1)=="#") {
+        LastSaid="!send "+LastSaid:sub(2)
+    }
+    if(LastSaid:left(1)=="!") {
+        CmdArr=LastSaid:sub(2):explode(" ")
+        Cmd=CmdArr:removeString(1)
+        Args=CmdArr:concat(" ")
+        if(Cmd=="join") {
+            hideChat(1)
+            dsJoinGroup(Args)
+            print("Joined "+Args)
+        } elseif(Cmd=="leave") {
+            hideChat(1)
+            dsLeaveGroup(Args)
+            print("Left "+Args)
+        } elseif(Cmd=="clear") {
+            hideChat(1)
+            dsClearGroups()
+            print("Left all groups")
+        } elseif(Cmd=="list") {
+            hideChat(1)
+            printTable(dsGetGroups())
+        } elseif(Cmd=="send") {
+            hideChat(1)
+            CmdArr=Args:explode(" ")
+            Signal=CmdArr:removeString(1)
+            Group=CmdArr:removeString(1)
+            Args=CmdArr:concat(" ")
+            Result=parse(Args)
+            printTable(Result)
+            dsSendAny(Signal, Group, 2, Result)
+        } elseif(Cmd=="senddirect") {
+            hideChat(1)
+            CmdArr=Args:explode(" ")
+            Signal=CmdArr:removeString(1)
+            Chip=owner():aimEntity()
+            Args=CmdArr:concat(" ")
+            dsSendDirectAny(Signal, Chip, parse(Args))
+        }
+    }
+}
+
+if(dsClk()) {
+    printColor(vec(0, 127, 0), dsClkName()+" (", vec(0, 0, 127), dsGetGroup(), vec(0, 127, 0), ") - ", vec(127, 0, 0), dsGetType())
+    if(dsGetType()=="number") {
+        printColor(vec(255, 127, 127), dsGetNumber():toString())
+    } elseif(dsGetType()=="string") {
+        printColor(vec(127, 127, 127), dsGetString())
+    } elseif(dsGetType()=="entity") {
+        printColor(vec(127, 127, 255), dsGetEntity():toString())
+    } elseif(dsGetType()=="array") {
+        printColor(vec(0, 0, 255), invert(invert(dsGetArray())):toString())
+        printColor(vec(0, 0, 255), "("+dsGetArray():count():toString()+" elements)")
+    } elseif(dsGetType()=="table") {
+        printColor(vec(0, 0, 0), dsGetTable():toString())
+        printColor(vec(0, 0, 0), "("+dsGetTable():count():toString()+" elements)")
+    }
+}

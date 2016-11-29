@@ -1,0 +1,29 @@
+@name E2:Virus
+@inputs 
+@outputs 
+@persist Target:entity P1:entity P2:entity
+@trigger none
+
+if( first() ) {
+    interval( 5000 )
+    Target = entity():isConstrainedTo()
+} else {
+    if( Target:hasConstraints() > 1 ) {
+        Target = Target:isConstrainedTo()
+        
+        if( Target == P2 ) {
+            Target = Target:isConstrainedTo( 2 )
+        }
+        
+        interval( 5000 )
+    } else {
+        exit()
+    }
+}
+
+print( "P2: " + (P2 ? P2:id() : -1) )
+print( "P1: " + (P1 ? P1:id() : -1) )
+print( "Target: " + Target:id() )
+
+P2 = P1
+P1 = Target

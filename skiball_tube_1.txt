@@ -1,0 +1,9 @@
+@name Skiball Tube 1
+@inputs 
+@outputs 
+@persist Self:entity
+@model models/hunter/tubes/tube2x2x1.mdl
+
+if( first() ) {
+    Self = entity()
+}

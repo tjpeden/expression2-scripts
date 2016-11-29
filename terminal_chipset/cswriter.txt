@@ -1,0 +1,128 @@
+@name Console Screen Writer
+@inputs Console:wirelink History:array Typing:string
+@outputs Index
+@persist Index Cursor Timer
+
+# Chat Terminal Program - TJ /A.W.F/
+#
+# [2039] - Hardware Clear Row (Writing clears row)
+# [2040] - Hardware Clear Column (Writing clears column)
+# [2041] - Hardware Clear Screen
+# [2042] - Hardware Background Color (000)
+
+interval( 20 )
+
+C_Typing = 999 # White - color for typing
+C_Local = 90 # Green - color for local text
+C_Remote = 900 # Red - color for remote text
+
+Prompt = "L:>"
+
+if( first() | ~History ) {
+    #Index = 1
+    Timer = 1
+    Console:writeCell( 2041, 1 )
+}
+
+if( ~History & History:count() != 0 ) {
+    Text = History:string( 1 )
+    Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+    Console:writeString( Text, 0, 0, Color )
+    if( History:count() >= 2 ) {
+        Text = History:string( 2 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 1, Color )
+    }
+    if( History:count() >= 3 ) {
+        Text = History:string( 3 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 2, Color )
+    }
+    if( History:count() >= 4 ) {
+        Text = History:string( 4 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 3, Color )
+    }
+    if( History:count() >= 5 ) {
+        Text = History:string( 5 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 4, Color )
+    }
+    if( History:count() >= 6 ) {
+        Text = History:string( 6 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 5, Color )
+    }
+    if( History:count() >= 7 ) {
+        Text = History:string( 7 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 6, Color )
+    }
+    if( History:count() >= 8 ) {
+        Text = History:string( 8 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 7, Color )
+    }
+    if( History:count() >= 9 ) {
+        Text = History:string( 9 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 8, Color )
+    }
+    if( History:count() >= 10 ) {
+        Text = History:string( 10 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 9, Color )
+    }
+    if( History:count() >= 11 ) {
+        Text = History:string( 11 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 10, Color )
+    }
+    if( History:count() >= 12 ) {
+        Text = History:string( 12 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 11, Color )
+    }
+    if( History:count() >= 13 ) {
+        Text = History:string( 13 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 12, Color )
+    }
+    if( History:count() >= 14 ) {
+        Text = History:string( 14 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 13, Color )
+    }
+    if( History:count() >= 15 ) {
+        Text = History:string( 15 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 14, Color )
+    }
+    if( History:count() >= 16 ) {
+        Text = History:string( 16 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 15, Color )
+    }
+    if( History:count() >= 17 ) {
+        Text = History:string( 17 )
+        Color = ( Text:sub(0,1) == "L" ? 90 : 900 )
+        Console:writeString( Text, 0, 16, Color )
+    }
+}
+
+if( Timer % 25 == 0 ) {
+    Cursor = !Cursor
+}
+
+Timer++
+
+Text = Prompt + Typing
+Text += ( Cursor ? "|" : "" )
+Text = Text + " ":repeat( 30 - Text:length() )
+
+Console:writeString( Text, 0, 17, 999 )
+
+#Text = History:string( Index )
+#Color =( Text:sub(0,1) == "L" ? 90 : 900 )
+#Console:writeString( Text, 0, Index, Color )
+#Index = ( Index + 1 ) % 18

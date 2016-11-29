@@ -1,0 +1,451 @@
+@name Main Permission Controller
+@inputs Kbd Cns:wirelink
+@outputs 
+#State variables
+@persist State
+#Data tables
+@persist Perms:table PEDict:array ULevels:table NextID Groups:table GroupLookup:table Buffer:string
+#Constants
+@persist ST_LOADING ST_RUNNING ST_BUSY
+@persist C_RED C_GREEN C_BLUE C_YELLOW C_MAGENTA C_CYAN C_ORANGE
+@persist PE_OK PE_BY_UID PE_BY_GID PE_BY_LEVEL PE_BY_TRUE PE_BY_FALSE
+@persist PE_BY_AND PE_INVERTED
+@persist [PT_UID PT_GID PT_LEVEL PT_TRUE PT_FALSE PT_OR PT_AND PT_INVERT]:string
+@persist K_DOWN K_UP K_LEFT K_RIGHT K_ENTER K_BACK K_TAB K_SHIFT K_CTRL
+#Function block
+@persist CN__Print:function CN__PrintColor:function CN__Clear:function
+@persist CN_Print:function CN_PrintColor:function CN_Clear:function
+@persist PE_Create:function PE_Delete:function
+@persist PE_GetType:function PE_SetType:function
+@persist PE_GetData:function PE_SetData:function
+@persist PE_Apply:function PE_MakeString:function
+@persist PS_Create:function PS_Delete:function
+@persist PS_SetAllow:function PS_SetDeny:function PS_SetTrump:function
+@persist PS_GetAllow:function PS_GetDeny:function PS_GetTrump:function
+@persist PS_Apply:function
+@persist GR_Create:function GR_Delete:function
+@persist GR_HasUser:function GR_AddUser:function GR_RemoveUser:function
+@persist GR_ListUsers:function GR_GetGroups:function
+@persist IO_IHook:function IO_IH_Buffer:function IO_BufferFull:function
+@persist IO_BF_Nothing:function
+@trigger 
+@model models/props/pc_case02/pc_case02.mdl
+
+if((first()&->Cns)|(clk("cn_connect")&->Cns)) {
+    Cns[2041]=1
+    Cns[2043]=0.5
+    Cns[2046]=1
+    Cns[2045]=0
+    Cns[2036]=0
+    Cns:writeString("Grissess' Permission System", 0, 0, 90)
+    Cns:writeString("Loading constants...", 0, 1)
+    ST_LOADING=1
+    ST_RUNNING=2
+    ST_BUSY=3
+    State=ST_LOADING
+    C_RED=900
+    C_GREEN=90
+    C_BLUE=9
+    C_YELLOW=990
+    C_MAGENTA=909
+    C_CYAN=99
+    C_ORANGE=940
+    PE_OK=0
+    PE_BY_UID=1
+    PE_BY_GID=2
+    PE_BY_LEVEL=3
+    PE_BY_TRUE=4
+    PE_BY_FALSE=5
+    PE_BY_AND=6
+    PE_INVERTED=10
+    PT_UID="U"
+    PT_GID="G"
+    PT_LEVEL="L"
+    PT_TRUE="T"
+    PT_FALSE="F"
+    PT_OR="|"
+    PT_AND="&"
+    PT_INVERT="!"
+    K_UP=17
+    K_DOWN=18
+    K_LEFT=19
+    K_RIGHT=20
+    K_ENTER=13
+    K_BACK=127
+    K_TAB=9
+    K_SHIFT=154
+    K_CTRL=158
+    timer("gui_ld", 50) #Kick off GUI loading screen
+    Cns:writeString("Loading conio...", 0, 2)
+    timer("ld_conio", 1000)
+} elseif(!->Cns) {
+    timer("cn_connect",1000)
+}
+
+if(clk("gui_ld")) {
+    for(X=0,29) {
+        if(State==ST_BUSY) {
+            Cns:writeString(" ", X, 17, 0, 10*int(4*sinr(0.25*X+curtime())+5))
+        } else {
+            Cns:writeString(" ", X, 17, 0, int(4*sinr(0.25*X+curtime())+5))
+        }
+    }
+    if(State==ST_LOADING|State==ST_BUSY) {
+        timer("gui_ld", 50)
+    }
+}
+
+if(clk("ld_conio")) {
+    function CN__Print(Text:string) {
+        Lines=int(Text:length()/30)+1
+        Cns[2038]=Lines
+        for(I=1,Lines) {
+            Ln=Text:sub(1+((I-1)*30), I*30)
+            while(Ln:length()<30) {
+                Ln=Ln+" "
+            }
+            Cns:writeString(Ln, 0, 16-(Lines-I))
+        }
+        Cns[2047]=1
+    }
+    function CN__PrintColor(Text:string, Color) {
+        Lines=int(Text:length()/30)+1
+        Cns[2038]=Lines
+        for(I=1,Lines) {
+            Cns:writeString(Text:sub(1+((I-1)*30), I*30), 0, 16-(Lines-I), Color)
+        }
+        Cns[2047]=1
+    }
+    function CN__Clear() {
+        Cns[2041]=1
+    }
+    CN_Print=CN__Print
+    CN_PrintColor=CN__PrintColor
+    CN_Clear=CN__Clear
+    CN_Print("Done loading conio.")
+    CN_Print("Loading stored permissions...")
+    timer("ld_perms",500)
+}
+
+if(clk("ld_perms")) {
+    if(!fileCanLoad()) {
+        CN_PrintColor("Warning! Cannot load files here! Perms list will be empty.", C_ORANGE)
+        Perms=table()
+        PEDict=array()
+        ULevels=table()
+        NextID=1
+        CN_Print("Loading API...")
+        timer("ld_api",500)
+    } else {
+        fileLoad("perms.txt")
+        runOnFile(1)
+    }
+}
+
+if(fileClk("perms.txt")) {
+    if(fileStatus()==_FILE_404) {
+        CN_PrintColor("Warning! File not found. Perms list will be empty.", C_ORANGE)
+        Perms=table()
+        PEDict=array()
+        ULevels=table()
+        NextID=1
+        CN_Print("Loading API...")
+        timer("ld_api", 500)
+    } elseif(fileStatus()==_FILE_OK) {
+        CN_Print("Loaded stored permissions")
+        Perms=glonDecodeTable(fileRead())
+        CN_Print("Loading PEDict...")
+        fileLoad("pedict.txt")
+    } else {
+        CN_PrintColor("An unknown error occured while trying to send the file. Perms list will be empty.", C_RED)
+        Perms=table()
+        PEDict=array()
+        ULevels=table()
+        NextID=1
+        CN_Print("Loading API...")
+        timer("ld_api", 500)
+    }
+}
+
+if(fileClk("pedict.txt")) {
+    if(fileStatus()==_FILE_404) {
+        CN_PrintColor("Warning! File not found. Perms list will be empty.", C_ORANGE)
+        Perms=table()
+        PEDict=array()
+        ULevels=table()
+        NextID=1
+        CN_Print("Loading API...")
+        timer("ld_api", 500)
+    } elseif(fileStatus()==_FILE_OK) {
+        CN_Print("Loaded PEDict")
+        PEDict=glonDecode(fileRead())
+        NextID=PEDict:maxIndex()
+        CN_Print("Loading User Levels...")
+        fileLoad("ulevels.txt")
+    } else {
+        CN_PrintColor("An unknown error occured while trying to send the file. Perms list will be empty.", C_RED)
+        Perms=table()
+        PEDict=array()
+        ULevels=table()
+        NextID=1
+        CN_Print("Loading API...")
+        timer("ld_api", 500)
+    }
+}
+
+if(fileClk("pedict.txt")) {
+    if(fileStatus()==_FILE_404) {
+        CN_PrintColor("Warning! File not found. Perms list will be empty.", C_ORANGE)
+        Perms=table()
+        PEDict=array()
+        ULevels=table()
+        NextID=1
+        CN_Print("Loading API...")
+        timer("ld_api", 500)
+    } elseif(fileStatus()==_FILE_OK) {
+        CN_Print("Loaded User Levels")
+        ULevels=glonDecodeTable(fileRead())
+        CN_Print("Loading API...")
+        timer("ld_api", 500)
+    } else {
+        CN_PrintColor("An unknown error occured while trying to send the file. Perms list will be empty.", C_RED)
+        Perms=table()
+        PEDict=array()
+        ULevels=table()
+        NextID=1
+        CN_Print("Loading API...")
+        timer("ld_api", 500)
+    }
+}
+
+if(clk("ld_api")) {
+    #Here's where it gets messy
+    #PE_: Handles PermEntity stuff (things in the PEDict)
+    function PE_Create(Type:string, Data:string) { #-> PEID (number)
+        PEDict[NextID, string]=Type+Data
+        NextID=NextID+1
+        return NextID-1
+    }
+    function PE_Delete(PEID) {
+        PEDict[PEID, string]=""
+    }
+    function PE_GetType(PEID) { #-> string
+        return PEDict[PEID, string]:left(1)
+    }
+    function PE_SetType(PEID, Type:string) {
+        PEDict[PEID, string]=Type+PE_GetData(PEID)[string]
+    }
+    function PE_GetData(PEID) { #-> string
+        return PEDict[PEID, string]:sub(2)
+    }
+    function PE_SetData(PEID, Data:string) {
+        PEDict[PEID, string]=PE_GetType(PEID)[string]+Data
+    }
+    function PE_Apply(PEID, User:entity) { #fun! -> array(bool_applies, which_rule)
+        Type=PE_GetType(PEID)[string]
+        Data=PE_GetData(PEID)[string]
+        if(Type==PT_UID) {
+            #Data is a SteamID
+            return array(User:steamID()==Data, PE_BY_UID)
+        } elseif(Type==PT_GID) {
+            #Data is a string group name
+            GIDs=GR_GetGroups(User:steamID())[array]
+            for(I=1,GIDs:count()) {
+                if(GIDs[I, string]==Data) {
+                    return array(1, PE_BY_GID)
+                }
+            }
+            return array(0, PE_BY_GID)
+        } elseif(Type==PT_LEVEL) {
+            #Data is a string of a level
+            return array(ULevels[User:steamID(), number]>=Data:toNumber(), PE_BY_LEVEL)
+        } elseif(Type==PT_TRUE) {
+            return array(1, PE_BY_TRUE)
+        } elseif(Type==PT_FALSE) {
+            return array(0, PE_BY_FALSE)
+        } elseif(Type==PT_OR) {
+            #Data is a comma-seperated list of other PermEntityIDs
+            PEIDs=Data:explode(",")
+            for(I=1,PEIDs:count()) {
+                Res=PE_Apply(PEIDs[I, string]:toNumber(), User)[array]
+                if(Res[1, number]) {
+                    return array(1, Res[2, number])
+                }
+            }
+            return array(0, PE_BY_AND)
+        } elseif(Type==PT_AND) {
+            #Ditto
+            PEIDs=Data:explode(",")
+            for(I=1,PEIDs:count()) {
+                Res=PE_Apply(PEIDs[I, string]:toNumber(), User)[array]
+                if(!Res[1, number]) {
+                    return array(0, PE_BY_AND)
+                }
+            }
+            return array(1, PE_BY_AND)
+        } elseif(Type==PT_INVERT) {
+            #Data is another PEID
+            Res=PE_Apply(Data:toNumber(), User)[array]
+            return array(!Res[1, number], PE_INVERTED+Res[2, number])
+        } else {
+            return array(0, PE_OK) #Not really...this is an erroneous type
+        }
+    }
+    function PE_MakeString(PERes:array) { #-> string
+        Bool=PERes[1, number]
+        Why=PERes[2, number]
+        if(Bool) {
+            S="passed by "
+        } else {
+            S="failed by "
+        }
+        if(Why>PE_INVERTED) {
+            S=S+"inverted "
+            Why=Why-10
+        }
+        if(Why==PE_BY_UID) {
+            S=S+"UID"
+        } elseif(Why==PE_BY_GID) {
+            S=S+"GID"
+        } elseif(Why==PE_BY_LEVEL) {
+            S=S+"level"
+        } elseif(Why==PE_BY_TRUE) {
+            S=S+"true"
+        } elseif(Why==PE_BY_FALSE) {
+            S=S+"false"
+        } elseif(Why==PE_BY_AND) {
+            S=S+"multiple conditions"
+        } else {
+            S=S+"unknown"
+        }
+        return S
+    }
+    #PS_: Handles PermissionSystem stuff
+    function PS_Create(Name:string, Allow, Deny, Trump) {
+        #A Permission consists of three PermEntities in a string, stored as:
+        #allow,deny,trump
+        #The formal logic equation representing whether a permission is
+        #allowed for a particular user is as follows:
+        #(A&!D)|T
+        #Where A, D, and T are the results of Applying allow, deny, and trump, respectively.
+        Perms[Name, string]=Allow:toString()+","+Deny:toString()+","+Trump:toString()
+    }
+    function PS_Delete(Name:string) {
+        Perms[Name, string]=""
+    }
+    function PS_SetAllow(Name:string, Allow) {
+        Perms[Name, string]=Allow:toString()+","+PS_GetDeny(Name)[number]:toString()+","+PS_GetTrump(Name)[number]:toString()
+    }
+    function PS_GetAllow(Name:string) { #-> number
+        return Perms[Name, string]:explode(",")[1, string]:toNumber()
+    }
+    function PS_SetDeny(Name:string, Deny) {
+        Perms[Name, string]=PS_GetAllow(Name)[number]:toString()+","+Deny:toString()+","+PS_GetTrump(Name)[number]:toString()
+    }
+    function PS_GetDeny(Name:string) { #-> number
+        return Perms[Name, string]:explode(",")[2, string]:toNumber()
+    }
+    function PS_SetTrump(Name:string, Trump) {
+        Perms[Name, string]=PS_GetAllow(Name)[number]:toString()+","+PS_GetDeny(Name)[number]:toString()+","+Trump:toString()
+    }
+    function PS_GetTrump(Name:string) { #-> number
+        return Perms[Name, string]:explode(",")[3, string]:toNumber()
+    }
+    function PS_Apply(Name:string, User:entity) { #-> number
+        CN_Print("Permission query for "+Name)
+        Allow=PE_Apply(PS_GetAllow(Name)[number], User)[array]
+        CN_PrintColor("Allow "+PE_MakeString(Allow)[string], C_GREEN)
+        if(!Allow[1, number]) {
+            Trump=PE_Apply(PS_GetTrump(Name)[number], User)[array]
+            CN_PrintColor("Trump "+PE_MakeString(Trump)[string], C_YELLOW)
+            return Trump[1, number]
+        }
+        Deny=PE_Apply(PS_GetDeny(Name)[number], User)[array]
+        CN_PrintColor("Deny "+PE_MakeString(Deny)[string], C_RED)
+        if(Deny[1, number]) {
+            Trump=PE_Apply(PS_GetTrump(Name)[number], User)[array]
+            CN_PrintColor("Trump "+PE_MakeString(Trump)[string], C_YELLOW)
+            return Trump[1, number]
+        }
+        return 1 #Allowed and not denied :)
+    }
+    #GR_: Group management stuff
+    function GR_Create(Name:string) {
+        Groups[Name, string]="" #XXX Useless?
+    }
+    function GR_Delete(Name:string) { #O_O
+        UIDs=GR_ListUsers(Name)[array]
+        for(I=1,UIDs:count()) {
+            UID=UIDs[I, string]
+            GIDs=GR_GetGroups(UID)[array]
+            NewList=""
+            for(J=1,GIDs:count()) { #NOOOOOOO!!!! DOUBLE LOOP!!!!
+                if(GIDs[J, string]!=Name) {
+                    NewList=NewList+","+GIDs[J, string]
+                }
+            }
+            GroupLookup[UID, string]=NewList
+        }
+        Groups[Name, string]=""
+    }
+    function GR_HasUser(Name:string, User:entity) { #-> number
+        UIDs=GR_ListUsers(Name)[array]
+        for(I=1,UIDs:count()) {
+            if(UIDs[I, string]==User:steamID()) {
+                return 1
+            }
+        }
+        return 0
+    }
+    function GR_AddUser(Name:string, User:entity) {
+        Groups[Name, string]=Groups[Name, string]+","+User:steamID()
+        GroupLookup[User:steamID(), string]=GroupLookup[User:steamID(), string]+","+Name
+    }
+    function GR_RemoveUser(Name:string, User:entity) {
+        #D'oh schnap...
+        UID=User:steamID()
+        UIDs=GR_ListUsers(Name)[array]
+        NewList=""
+        for(I=1,UIDs:count()) {
+            if(UIDs[I, string]!=UID) {
+                NewList=NewList+","+UIDs[I, string]
+            }
+        }
+        Groups[Name, string]=NewList
+        GIDs=GR_GetGroups(UID)[array]
+        NewList=""
+        for(I=1,GIDs:count()) {
+            if(GIDs[I, string]!=Name) {
+                NewList=NewList+","+GIDs[I, string]
+            }
+        }
+        GroupLookup[UID, string]=NewList
+    }
+    function GR_ListUsers(Name:string) { #-> array
+        Arr=Groups[Name, string]:explode(",")
+        Res=array()
+        for(I=1,Arr:count()) {
+            if(Arr[I, string]) {
+                Res:pushString(Arr[I, string])
+            }
+        }
+        return Res
+    }
+    function GR_GetGroups(UID:string) { #-> array
+        Arr=GroupLookup[UID, string]:explode(",")
+        Res=array()
+        for(I=1,Arr:count()) {
+            if(Arr[I, string]) {
+                Res:pushString(Arr[I, string])
+            }
+        }
+        return Res
+    }
+    CN_Print("Done loading API")
+    CN_Print("Loading KIO...")
+    timer("ld_kio", 500)
+}
+
+if(clk("ld_kio")) {
+    
+}

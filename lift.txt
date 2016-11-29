@@ -1,0 +1,22 @@
+@name Lift
+@persist O:entity E:entity A
+
+if( first() ) {
+    runOnTick(1)
+    O = owner()
+    E = O
+}
+
+if( O:weapon():type() == "weapon_physgun" & O:keyAttack2() ) {
+    E:applyForce( vec(0, 0, gravity()) * ( 0.1 * E:mass() ) )
+}
+
+L = A
+A = O:keyUse()
+if( A & A != L ) {
+    T = O:aimEntity()
+    if( T & T:type() == "prop_physics" ) {
+        O:soundPlay( 0, 0, "ambient/tones/elev1.wav" )
+        E = T
+    }
+}

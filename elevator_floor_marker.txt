@@ -1,0 +1,13 @@
+@name Elevator Floor Marker
+@inputs Call
+@persist Z
+
+if( first() ) {
+    Z = entity():pos():z()
+    
+    dsSend( "Register", "Elevator", Z )
+}
+
+if( Call & ~Call ) {
+    dsSend( "Call", "Elevator", Z )
+}

@@ -1,0 +1,7 @@
+@name 
+@inputs 
+@outputs Type:string
+@persist 
+@trigger all
+
+Type = "npc_metropolice"

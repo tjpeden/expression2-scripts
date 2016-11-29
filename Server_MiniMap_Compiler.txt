@@ -1,0 +1,131 @@
+@name Server MiniMap Compiler
+@inputs 
+@outputs Find:array I RPos:vector LastI Sub Next  D:vector
+@persist E:entity Scale A Finnished  I VecPos:vector Step LastPos:vector Row Next Sub I2  D:vector
+@trigger 
+
+interval(100)
+
+
+
+
+if(first()) {
+    E = entity()
+    S1 = 1
+    S2 = 1
+    S3 = 1
+    A = 0.00435
+    I = 30
+    Step = 1
+    Chunk = 1
+    Scale = 5
+    Finnished = 0
+    Done = 0
+    VecPos = vec(230,230,100)
+    holoCreate(1450)
+    holoPos(1450,E:pos()+(-E:pos()-((vec(0,0,0)*-Scale*vec(0,0,0.43))))/VecPos-vec(-20,4,0)*Scale)
+    holoScale(1450,vec(4.5*Scale,2.6*Scale,0.01))
+    holoColor(1450,vec(0,10,100))
+    holoAlpha(1450,150)
+    
+    findIncludeClass("ruby_money_printer")
+    findIncludeClass("sapphire_money_printer")
+    findIncludeClass("emerald_money_printer")
+    findIncludeClass("topaz_money_printer")
+    findIncludeClass("prop_physics")
+    findIncludeClass("ammoshop")
+    findIncludeClass("dzg_shipment")
+    findIncludeClass("spawned_weapon")
+    findIncludeClass("prop_dynamic")
+    findExcludeModel("models/props_c17/door01_left.md")
+    findInSphere(entity():pos(),510)
+    Find = findToArray()
+     print("Buffering")   
+}
+if(!Finnished) {
+    if(Step == 1) {
+        holoCreate(I)
+        holoAlpha(I,0)
+        holoModel(I,Find[I-30,entity]:model())
+        holoPos(I,E:pos()+(-E:pos()-(((Find[I-30,entity]:pos()+vec(0,0,0))*-Scale*vec(1,1,0.43))))/VecPos)
+        holoAng(I,Find[I-30,entity]:angles())
+        holoScale(I,vec(A*Scale,A*Scale,A*Scale))
+        holoParent(I,entity())
+        I++
+        if(I>=Find:count()+30) {
+            Step = 2
+            I = 0
+            print("Buffer Completed")
+            print("Compiling props")
+            hint("Buffer Complete",5000)
+        }
+    }
+    if(Step == 2) {
+        holoAlpha(I,255)
+        holoMaterial(I,Find[I-30,entity]:getMaterial())
+        I++
+        if(I>=Find:count()+30&Step!=3) {
+            Step = 3
+            Finnished = 0
+            LastI = I
+            print("Prop Compile Complete")
+            hint("Build Complete",5000)
+            entity():soundPlay(1,0,"buttons/button17.wav")
+        }
+    } 
+    if(Step == 3) {
+        Ranger = rangerOffset(99999,vec(300*(I2)-1500,-3000+300*Row,1500),-entity():up())
+       #holoCreate(I,E:pos()+(vec(0,0,0)-(Ranger:position()*-Scale*vec(1,1,0.5))+vec(0,0,0) )/VecPos-vec(0,0,16.5)*Scale,vec(0.1*Scale,0.1*Scale,0.01))
+       if(Ranger:position():z() >80) {
+            #Height =(Ranger:position():z() - 76)/3^(4/Scale)
+            holoCreate(I)
+            holoColor(I,vec(0,Ranger:position():z(),255))
+            holoScale(I,vec(0.1*Scale,0.1*Scale,0.01))
+            holoPos(I,(E:pos()-(E:pos()-(Ranger:position()-vec(0,0,Ranger:position():z()))*Scale)/VecPos))
+            holoAlpha(I,Ranger:position():z()/8+50)
+      }
+      holoClipEnabled(I,1)
+      holoClip(I,vec(0,0,0),vec(0,0,1),0)
+      holoParent(I,entity())
+    if(I>=LastI+40) {
+        Row++
+        LastI = I
+        I2 = 0
+        
+    }
+    if(I>700+Find:count()) {
+        Step = 0
+        Finnished = 1
+    }
+        I++
+       I2++
+    
+    }     
+}
+
+
+
+
+
+if(Finnished) {
+Players = players()
+for(I=1,Players:count()) {
+
+        Team = Players[I,entity]:team()
+
+        holoCreate(I)
+        holoModel(I,"hqcylinder")
+        holoPos(I,E:pos()+(-E:pos()-((Players[I,entity]:pos()*-Scale*vec(1,1,0.43))+vec(0,0,0)))/VecPos-vec(0,0,-0.15)*Scale)
+        holoAng(I,Players[I,entity]:angles())
+        holoColor(I,teamColor(Team))
+        holoScale(I,vec(0.01*Scale,0.01*Scale,0.025*Scale))
+    }
+
+}
+if(clk("doBuild"))  {
+Finnished = 0
+Step = 1
+I = 0
+
+} 
+
