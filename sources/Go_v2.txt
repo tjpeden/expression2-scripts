@@ -1,88 +1,88 @@
-@name Go! 2
+@name Go! v2
 @inputs Vehicle:wirelink Light:wirelink
-@persist Pod:table Modes:table Events:table
+@persist [Pod Events Modes]:table
 @model models/props_c17/tools_wrench01a.mdl
 
 if(first() | dupefinished()) {
     runOnTick(1)
-    
+
     #include "lib/entity"
     #include "lib/event"
-    
+
     Modes = table("Height", "Thrust", "Lift")
-    
+
     function number direction(S:string, V:wirelink) {
         local Keys = S:explode("|")
         return V[Keys[1, string], number] - V[Keys[2, string], number]
     }
-    
+
     function normal shouldNegate(Key:string, V:wirelink) {
         return 1 - V[Key, number] * 2 # if 1 then -1 else 1
     }
-    
+
     function number table:yawDelta(V:wirelink) {
         return direction("A|D", V) * shouldNegate("S", V) * 10
     }
-    
+
     function table:doHover(V:wirelink) {
         local Base = This["Base", entity]
         local Diff = Pod:current("Height") - Base:altitude()
         local InAir = Diff < 0
-        
+
         if(Pod:current("Space") & !InAir) {
             Pod:toggle("Jump")
             timer("StopJump", 200)
         }
-        
+
         Pod:update("Z", Diff * 7000 * !InAir)
         local Gravity = (Base:isUnderWater() ? -50000 : Pod:current("Jump") ? -Pod:current("Lift") : 14000)
         local Lift = Pod:current("Z") + Pod:delta("Z") * 5 - Gravity
         local Thrust = Pod:current("Thrust") * !InAir * direction("W|S", V)
         local Drift = 100 - InAir * 95 - Pod:current("Shift") * !InAir * 80
-        
-        
+
+
         Base:hoverRight(Thrust, Drift, Lift)
         Base:upRight(This:yawDelta(V))
     }
-    
+
     function updateMode(Args:table) {
         local Delta = Args:popNumber()
-        
+
         Pod:update("Mode", clamp(Pod:current("Mode") + Delta, 1, Modes:count()))
         if(Pod:hasChanged("Mode")) {
             Pod["Base", entity]:printColorDriver(vec(0, 0, 255), "Mode: ", vec(0, 255, 0), Modes[Pod:current("Mode"), string])
         }
     }
-    
+
     function updateModeValue(Args:table) {
         local Delta = Args:popNumber()
         local Mode = Modes[Pod:current("Mode"), string]
         local ModeMax = Pod:current(Mode + ".Max")
         local ModeMin = Pod:current(Mode + ".Min")
         local ModeStep = Pod:current(Mode + ".Step")
-        
+
         Pod:update(Mode, clamp(Pod:current(Mode) + ModeStep * Delta, ModeMin, ModeMax))
         if(Pod:hasChanged(Mode)) {
             local Base = Pod["Base", entity]
-            
+
             Base:printColorDriver(vec(0, 0, 255), Mode + ": ", vec(0, 255, 0), Pod:current(Mode))
         }
     }
-    
+
     function playVehicleSound(Args:table) {
         local File = Args:popString()
         local Base = Pod["Base", entity]
-        
+
         Base:soundPlay(2, 0, File)
     }
-    
+
     function toggleLight() { Pod:toggle("!Light") }
-    
+
     function updateLight() {
         Light["RGB", vector] = (Pod:current("!Light") ? vec(255,255,255) : vec(0,0,0))
         Light["GlowSize", number] = 512
     }
-    
+
     function table:think(V:wirelink) {
         This:update("PrevWeapon", V)
         This:update("NextWeapon", V)
@@ -92,22 +92,22 @@ if(first() | dupefinished()) {
         This:update("Light", V)
         This:update("Space", V)
         This:update("Shift", V)
-        
+
         Events:eventsThink()
-        
+
         This:doHover(V)
     }
-    
+
     function table newPod(Height, Thrust) {
         local Pod = table()
         local Self = entity()
         local Base = Self:isWeldedTo()
-        
+
         Base:setMass(1000)
         Base:setColor(vec(30,25,25), 192)
         Self:setMass(0.0001)
         Self:setColor(vec(0,128,0), 192)
-        
+
         Pod["Self", entity] = Self
         Pod["Base", entity] = Base
         Pod["Mode", number] = 1
@@ -123,7 +123,7 @@ if(first() | dupefinished()) {
         Pod["Lift.Max", number] = 200000
         Pod["Lift.Min", number] = 50000
         Pod["Lift.Step", number] = 25000
-        
+
         return Pod
     }
 }
@@ -132,26 +132,26 @@ if( !->Vehicle ) { exit() }
 
 if( !Pod ) {
     Pod = newPod(50, 800)
-    
+
     local Base = Pod["Base", entity]
-    
+
     if(Base:isVehicle()) {
         print("Vehicle")
     }
-    
+
     Light:entity():setAlpha(192)
-    
+
     holoCreate(0, Base:pos() + Base:up() * Base:height() + Base:right() * 50, vec(1, 1, 1), Base:angles(), vec(0, 0, 127))
     holoModel(0, "hq_icosphere")
     holoAlpha(0, 127)
     holoParent(0, Base)
-    
+
     printColor(vec(0, 0, 255), "Pod created.")
 }
 
 if( !Events ) {
     Events = newEvents(Pod)
-    
+
     Events:on("Mouse1", "rise", "updateMode", table(-1))
     Events:on("Mouse2", "rise", "updateMode", table(1))
     Events:on("NextWeapon", "rise", "updateModeValue", table(-1))
@@ -160,7 +160,7 @@ if( !Events ) {
     Events:on("Active", "fall", "playVehicleSound", table("items/samurai/tf_samurai_noisemaker_setb_02.wav"))
     Events:on("Light", "rise", "toggleLight")
     Events:on("!Light", "change", "updateLight")
-    
+
     printColor(vec(0, 0, 255), "Events created.")
 }
 

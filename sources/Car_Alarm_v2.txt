@@ -1,0 +1,109 @@
+@name Car Alarm v2
+@persist [Car Events]:table Altitude
+
+#[
+    Author: TJ Peden
+    License: MIT
+]#
+
+if( first() ) {
+    runOnTick( 1 )
+
+    #include "lib/obfuscate"
+    #include "lib/entity"
+    #include "lib/event"
+
+    function table newCar(Height, Thrust) {
+        local Car = table()
+        local Self = entity()
+        local Base = Self:isWeldedTo()
+        local Owner = Base:owner()
+
+        Base:setMass( 1000 )
+        Self:setMass( 0.0001 )
+        Self:setColor( vec( 0,128,0 ), 192 )
+
+        Car["Self", entity] = Self
+        Car["Base", entity] = Base
+        Car["Owner", entity] = Owner
+        Car["Height", number] = Height
+        Car["Thrust", number] = Thrust
+        Car["Float", number] = 0
+
+        return Car
+    }
+
+    function table:carThink() {
+        local Base = Car["Base", entity]
+        local Owner = Car["Owner", entity]
+        local Driver = Base:driver()
+        local Distance = Owner:pos():distance( Base:pos() )
+
+        Car:update( "Thrust", vec() )
+        Car:update( "Altitude", Base:altitude() )
+        Car:update( "Difference", Car:current( "Height" ) - Car:current( "Altitude" ) )
+        Car:update( "Lock", !(Driver | Distance <= 100) )
+        Car:update( "Reload", Driver:keyReload() )
+        Car:update( "Attack1", Driver:keyAttack1() )
+        Car:update( "Space", Driver )
+
+        Events:eventsThink()
+
+        Base:hoverRight( Car:current( "Thrust" ), 0, Car:current( "Lift" ) )
+        Base:upRight( 0 )
+    }
+
+    function playVehicleSound(Args:table) {
+        local File = Args:popString()
+        local Base = Car["Base", entity]
+
+        Base:soundPlay( 2, 0, File )
+    }
+
+    function handleLockChange() {
+        local Base = Car["Base", entity]
+
+        Base:lockPod( Car:current( "Lock" ) )
+    }
+
+    function toggleFloat() {
+        local Base = Car["Base", entity]
+
+        Car:update( "Height", Base:altitude() )
+        Car:toggle( "Float" )
+    }
+
+    function applyHorizontalThrust() {
+        local Base = Car["Base", entity]
+
+        Car:update( "Thrust", Car:current( "Thrust" ) + ( Base:forward() * Car:current( "Thrust" ) ):setZ( 0 ) )
+    }
+
+    function applyVerticalThrust() {
+        local Base = Car["Base", entity]
+        local InAir = Diff > 0
+
+        Car:update( "Lift", vec( 0, 0, 1/66 ) * Vehicle:mass() * gravity() * !InAir )
+
+        if( Car:current( "Float" ) ) {
+            Car:update( "Lift", Car:current( "Lift" ) + Car:current( "Difference" ) - Base:vel():z() )
+        }
+    }
+
+    function setup() {
+        Car = newCar(-1, 10000)
+    }
+
+    setup()
+}
+
+if(!Events) {
+    Events = newEvents(Car)
+
+    Events:on( "Lock",    "rise",   "playVehicleSound", table( "common/bugreporter_succeeded.wav" ) )
+    Events:on( "Lock",    "fall",   "playVehicleSound", table( "common/warning.wav" ) )
+    Events:on( "Lock",    "change", "handleLockChange" )
+    Events:on( "Reload",  "rise",   "toggleFloat" )
+    Events:on( "Attack1", "high",   "applyHorizontalThrust" )
+    Events:on( "Space",   "high",   "applyVerticalThrust" )
+}
