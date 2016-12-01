@@ -1,0 +1,46 @@
+@name Weapons Controller v2
+@inputs Gun:wirelink
+
+if( first() ) {
+  dsJoinGroup( "Weapons" )
+
+  #include "sources/lib/constance"
+
+  printColor( Red, "Name me, please" )
+}
+
+if( dsClk( "Activate" ) ) {
+  local Active = dsGetNumber()
+
+  Gun["Active", number] = Active
+  Gun["Open",   number] = Active
+}
+
+if( Gun:hasInput( "Fire" ) ) {
+  if( dsClk( "Target" ) ) {
+    local Target = dsGetEntity()
+    Gun["Target", entity] = Target
+
+    if( Target:isValid() ) {
+      if( Gun:hasInput( "Lock" ) ) {
+        Gun["Lock", number] = Target:isValid()
+      }
+
+      dsSendDirect( "Target.Aquired", dsGetSender() )
+    }
+  }
+
+  if( dsClk( "Fire" ) ) {
+    Gun["Fire", number] = dsGetNumber()
+  }
+}
+
+if( Gun:hasInput( "Launch" ) ) {
+  if( dsClk( "Target.Position" ) ) {
+    Gun["Vector", vector] = dsGetVector()
+  }
+
+  if( dsClk( "Fire" ) ) {
+    Gun["Lunch", number] = dsGetNumber()
+  }
+}

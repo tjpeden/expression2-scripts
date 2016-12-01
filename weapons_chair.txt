@@ -11,11 +11,11 @@ interval(1)
 if( first() ) {
     Off = 0
     On  = !Off
-    
+
     Hold    = 3
     Press   = 2
     Release = 1
-    
+
     Current = 2
     Last    = 1
 }
@@ -52,7 +52,7 @@ if( Alt == Press ) {
 if( Gunner ) {
     Angle = ang( -Pod["Elevation", number], Pod["Bearing", number], 0 )
     Cam["Angle", angle] = Angle
-    
+
     if( Pod["W", number] | Pod["S", number] ) {
         OS = vec(1, 0, 0):rotate(Angle:setPitch(-Angle:pitch()))
         Pos += OS:setZ(-OS:z()) * (10 - (Pod["S", number] * 2) + (Shift * 9)) * (Pod["W", number] - Pod["S", number])
@@ -68,16 +68,16 @@ if( Gunner ) {
         E = Pod["Entity", entity]
         Pos = E:driver():pos() + vec(0, 0, 120)
     }
-    
+
     Cam["Position", vector] = Pos
-    
+
     AD = vec(1, 0, 0):rotate(Angle)
-    
+
     RD = rangerOffset(1024, Pos, AD)
     AimPos = RD:position()
-    
+
     if( Mouse2 == Press ) {
-        
+
         Target = RD:entity()
         Lock = Target:isValid()
         if( Lock ) {
@@ -87,12 +87,12 @@ if( Gunner ) {
                 Gun["Vector", vector] = AimPos
             }
         }
-        
+
         if( Gun:hasInput("Lock") ) { Gun["Lock", number] = Lock }
     }
-    
+
     if( Lock & Target ) {
-        if( Mouse1 && Current == Current ) {
+        if( Mouse1 & Current == Current ) {
             if( Gun:hasInput("Fire") )   { Gun["Fire",   number] = On }
             if( Gun:hasInput("Launch") ) { Gun["Launch", number] = On }
         }

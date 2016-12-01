@@ -1,0 +1,101 @@
+@name Weapons Chair v2
+@inputs [Gun Pod Camera]:wirelink
+@persist [Self Events]:table
+
+if( first() ) {
+  runOnTick( 1 )
+
+  #include "sources/lib/obfuscate"
+  #include "sources/lib/constants"
+  #include "sources/lib/entity"
+  #include "sources/lib/event"
+
+  function void handleActiveRise() {
+    local Base = Self["Base", entity]
+
+    Self["Driver", entity] = Base:driver()
+  }
+
+  function void handleActiveFall() {
+    Self:update( "View", Off )
+    Self:update( "Lock", Off )
+  }
+
+  function void handleToggleView() {
+    Self:toggle( "View" )
+
+    local View = Self:current( "View" )
+
+    Cam["Activated", number] = View
+    Gun["Active",    number] = View
+    Gun["Open",      numver] = View
+  }
+
+  function void handleCriticalUpdate() {
+    Self:update( "Lock", Self["Target", entity]:isValid() )
+
+  }
+
+  function void handlLockTarget() {
+    # TODO: simulate lock time
+    Gun["Entity", entity] = Self["Target", entity]
+    # TODO: handle launch type
+    if( Gun:hasInput( "Lock" ) ) { Gun["Lock", number] = Lock }
+  }
+
+  function void handleView() {
+    local EGun = Self["EGun", entity]
+    local Position = EGun:pos() + vec( 0, 0, 120 )
+    local Angle = ang( -Pod["Elevation", number], Pod["Bearing", number], 0 )
+    local Direction = vec( 1, 0, 0 ):rotate( Angle )
+    local Ranger = rangerOffset( 1024, Position, Direction )
+
+    Self["Ranger", ranger]
+    Cam["Angle", angle] = Angle
+    Cam["Position", vector] = Position
+  }
+
+  function table new() {
+    local Self = table()
+    local Chip = entity()
+    local Base = Pod["Entity", entity]
+    local EGun = Gun["Entity", entity]
+
+    Self["Chip", entity] = Chip
+    Self["Base", entity] = Base
+    Self["EGun", entity] = Gun
+
+    Cam["Parent", entity] = Base
+  }
+
+  function void table:act() {
+    Self:update( "Active", Pod )
+    Self:update( "Mouse1", Pod )
+    Self:update( "Mouse2", Pod )
+    Self:update( "Shift",  Pod )
+    Self:update( "Alt",    Pod )
+
+    Events:eventsThink()
+  }
+
+  function void setup() {
+    Self = new()
+
+    Events = newEvents(Self)
+
+    Events:on( "Active", "rise", "handleActiveRise" )
+    Events:on( "Active", "fall", "handleActiveFall" )
+    Events:on( "Atl",    "rise", "handleToggleView" )
+    Events:on( "Mouse2", "rise", "handleAquireTarget" )
+    Events:on( "Active", "high", "handleCriticalUpdate" )
+    Events:on( "Lock",   "rise", "handlLockTarget" )
+    Events:on( "View",   "high", "handleView" )
+    Events:on( "Mouse1")
+  }
+
+  setup()
+}
+
+if( !Self:current( "Active" ) ) { exit() }
+
+if( tickClk() ) { Self:act() }

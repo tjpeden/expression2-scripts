@@ -1,5 +1,9 @@
 @name Constants
+@persist [On Off]:number
 @persist [Blue Green Red Teal Cyan]:vector
+
+Off = 0
+On  = !Off
 
 Blue = vec(0, 0, 255)
 Green = vec(0, 255, 0)
