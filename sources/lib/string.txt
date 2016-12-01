@@ -1,3 +1,4 @@
+@name libString
 #String utils
 
 function table qsplit(Str:string) {

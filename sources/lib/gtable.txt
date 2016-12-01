@@ -1,4 +1,4 @@
-@name gTable Lib
+@name libGTable
 
 function void gtable:update(Key:string, Value) {
     This["$"+Key, number] = Value - This[Key, number]

@@ -15,7 +15,7 @@
 #is the return table. This is primarily so the function can return custom error codes by setting
 #Success[number] to 0 and Reason[string] to a reason why it failed.
 
-#include "lib/string"
+#include "sources/lib/string"
 
 function table argsparse(Parts:table, Signature:string) {
     local Optional=0

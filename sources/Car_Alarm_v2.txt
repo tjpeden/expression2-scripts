@@ -1,5 +1,6 @@
 @name Car Alarm v2
-@persist [Car Events]:table Altitude
+@persist [Car Events Env]:table Altitude
+@outputs Car:table
 
 #[
     Author: TJ Peden
@@ -8,10 +9,13 @@
 
 if( first() ) {
     runOnTick( 1 )
+    runOnChat( 1 )
 
-    #include "lib/obfuscate"
-    #include "lib/entity"
-    #include "lib/event"
+    #include "sources/lib/obfuscate"
+    #include "sources/lib/constants"
+    #include "sources/lib/command"
+    #include "sources/lib/entity"
+    #include "sources/lib/event"
 
     function table newCar(Height, Thrust) {
         local Car = table()
@@ -19,8 +23,7 @@ if( first() ) {
         local Base = Self:isWeldedTo()
         local Owner = Base:owner()
 
-        Base:setMass( 1000 )
-        Self:setMass( 0.0001 )
+        Self:setMass( 1 )
         Self:setColor( vec( 0,128,0 ), 192 )
 
         Car["Self", entity] = Self
@@ -28,8 +31,10 @@ if( first() ) {
         Car["Owner", entity] = Owner
         Car["Height", number] = Height
         Car["Thrust", number] = Thrust
+        Car["Lift", number] = 0
         Car["Float", number] = 0
 
+        printColor( Cyan, "Car Alarm created" )
         return Car
     }
 
@@ -39,7 +44,7 @@ if( first() ) {
         local Driver = Base:driver()
         local Distance = Owner:pos():distance( Base:pos() )
 
-        Car:update( "Thrust", vec() )
+        Car:update( "Lift", 0 )
         Car:update( "Altitude", Base:altitude() )
         Car:update( "Difference", Car:current( "Height" ) - Car:current( "Altitude" ) )
         Car:update( "Lock", !(Driver | Distance <= 100) )
@@ -49,7 +54,7 @@ if( first() ) {
 
         Events:eventsThink()
 
-        Base:hoverRight( Car:current( "Thrust" ), 0, Car:current( "Lift" ) )
+        Base:hoverForward( Car:current("Thrust"), Car:current( "Attack1" ), Car:current( "Lift" ) )
         Base:upRight( 0 )
     }
 
@@ -69,41 +74,47 @@ if( first() ) {
     function toggleFloat() {
         local Base = Car["Base", entity]
 
-        Car:update( "Height", Base:altitude() )
         Car:toggle( "Float" )
-    }
-
-    function applyHorizontalThrust() {
-        local Base = Car["Base", entity]
-
-        Car:update( "Thrust", Car:current( "Thrust" ) + ( Base:forward() * Car:current( "Thrust" ) ):setZ( 0 ) )
+        Car:update( "Height", Base:altitude() * Car:current( "Float" ) )
     }
 
     function applyVerticalThrust() {
         local Base = Car["Base", entity]
-        local InAir = Diff > 0
+        local InAir = Car:current( "Difference" ) > 0
 
-        Car:update( "Lift", vec( 0, 0, 1/66 ) * Vehicle:mass() * gravity() * !InAir )
-
-        if( Car:current( "Float" ) ) {
-            Car:update( "Lift", Car:current( "Lift" ) + Car:current( "Difference" ) - Base:vel():z() )
-        }
+        Car:update( "Lift", ( vec( 0, 0, 1/66 ) * Base:mass() * gravity() * !InAir ):z() )
+    }
+    
+    function applyHover() {
+        local Base = Car["Base", entity]
+        
+        Car:update( "Lift", ( Car:current( "Difference" ) - Base:vel():z() ) * Base:mass() )
+    }
+    
+    function cmdDebug(Args:table, Ret:table) {
+        printTable( Car )
     }
 
     function setup() {
-        Car = newCar(-1, 10000)
+        Car = newCar( -1, 10000 )
+                
+        Events = newEvents(Car)
+    
+        Events:on( "Lock",    "rise",   "playVehicleSound", table( "common/bugreporter_succeeded.wav" ) )
+        Events:on( "Lock",    "fall",   "playVehicleSound", table( "common/warning.wav" ) )
+        Events:on( "Lock",    "change", "handleLockChange" )
+        Events:on( "Reload",  "rise",   "toggleFloat" )
+        Events:on( "Space",   "high",   "applyVerticalThrust" )
+        Events:on( "Float",   "high",   "applyHover" )
+        
+        Env = newEnv( ":" )
+        
+        Env:envAddCommand( newCommand( "debug", "cmdDebug", "" ) )
     }
 
     setup()
 }
 
-if(!Events) {
-    Events = newEvents(Car)
+if( chatClk() ) { Env:envExec( lastSaid() ) }
 
-    Events:on( "Lock",    "rise",   "playVehicleSound", table( "common/bugreporter_succeeded.wav" ) )
-    Events:on( "Lock",    "fall",   "playVehicleSound", table( "common/warning.wav" ) )
-    Events:on( "Lock",    "change", "handleLockChange" )
-    Events:on( "Reload",  "rise",   "toggleFloat" )
-    Events:on( "Attack1", "high",   "applyHorizontalThrust" )
-    Events:on( "Space",   "high",   "applyVerticalThrust" )
-}
+if( tickClk() ) { Car:carThink() }

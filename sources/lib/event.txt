@@ -1,7 +1,7 @@
 @name libEvent
 @persist PCV
 
-#include "lib/table"
+#include "sources/lib/table"
 
 function table newEvents(Data:table) {
     local T = table()

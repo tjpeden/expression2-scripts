@@ -1,6 +1,6 @@
 @name Custom SWEPs
 
-#include "lib/table"
+#include "sources/lib/table"
 
 function number table:swepIsHolding() {
     local Data = This["Data", table]

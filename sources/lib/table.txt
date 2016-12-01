@@ -17,6 +17,11 @@ function void table:update(Key:string, Entity:entity) {
     This:update(Key, Entity:keyPressed(Key))
 }
 
+function void table:update(Key:string, Value:vector) {
+    This["$"+Key, vector] = Value - This[Key, vector]
+    This[Key, vector] = Value
+}
+
 function void table:toggle(Key:string) {
     This:update(Key, !This[Key, number])
 }

@@ -6,8 +6,8 @@
 if(first() | dupefinished()) {
     runOnTick(1)
 
-    #include "lib/entity"
-    #include "lib/event"
+    #include "sources/lib/entity"
+    #include "sources/lib/event"
 
     Modes = table("Height", "Thrust", "Lift")
 
