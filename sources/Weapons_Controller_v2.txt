@@ -2,45 +2,45 @@
 @inputs Gun:wirelink
 
 if( first() ) {
-  dsJoinGroup( "Weapons" )
+    dsJoinGroup( "Weapons" )
 
-  #include "sources/lib/constance"
+    #include "sources/lib/constants"
 
-  printColor( Red, "Name me, please" )
+    printColor( Red, "Name me, please" )
 }
 
 if( dsClk( "Activate" ) ) {
-  local Active = dsGetNumber()
+    local Active = dsGetNumber()
 
-  Gun["Active", number] = Active
-  Gun["Open",   number] = Active
+    Gun["Active", number] = Active
+    Gun["Open",   number] = Active
 }
 
 if( Gun:hasInput( "Fire" ) ) {
-  if( dsClk( "Target" ) ) {
-    local Target = dsGetEntity()
-    Gun["Target", entity] = Target
+    if( dsClk( "Target" ) ) {
+        local Target = dsGetEntity()
+        Gun["Target", entity] = Target
 
-    if( Target:isValid() ) {
-      if( Gun:hasInput( "Lock" ) ) {
-        Gun["Lock", number] = Target:isValid()
-      }
+        if( Target:isValid() ) {
+            if( Gun:hasInput( "Lock" ) ) {
+                Gun["Lock", number] = Target:isValid()
+            }
 
-      dsSendDirect( "Target.Aquired", dsGetSender() )
+            dsSendDirect( "Target.Aquired", dsGetSender(), On )
+        }
     }
-  }
 
-  if( dsClk( "Fire" ) ) {
-    Gun["Fire", number] = dsGetNumber()
-  }
+    if( dsClk( "Fire" ) ) {
+        Gun["Fire", number] = dsGetNumber()
+    }
 }
 
 if( Gun:hasInput( "Launch" ) ) {
-  if( dsClk( "Target.Position" ) ) {
-    Gun["Vector", vector] = dsGetVector()
-  }
+    if( dsClk( "Target.Position" ) ) {
+        Gun["Vector", vector] = dsGetVector()
+    }
 
-  if( dsClk( "Fire" ) ) {
-    Gun["Lunch", number] = dsGetNumber()
-  }
+    if( dsClk( "Fire" ) ) {
+        Gun["Lunch", number] = dsGetNumber()
+    }
 }
