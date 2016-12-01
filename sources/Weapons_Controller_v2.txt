@@ -21,13 +21,11 @@ if( Gun:hasInput( "Fire" ) ) {
         local Target = dsGetEntity()
         Gun["Target", entity] = Target
 
-        if( Target:isValid() ) {
-            if( Gun:hasInput( "Lock" ) ) {
-                Gun["Lock", number] = Target:isValid()
-            }
-
-            dsSendDirect( "Target.Aquired", dsGetSender(), On )
+        if( Gun:hasInput( "Lock" ) ) {
+            Gun["Lock", number] = Target:isValid()
         }
+
+        dsSendDirect( "Target.Aquired", dsGetSender(), Target:isValid() )
     }
 
     if( dsClk( "Fire" ) ) {
