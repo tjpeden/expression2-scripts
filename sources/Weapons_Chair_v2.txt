@@ -1,5 +1,5 @@
 @name Weapons Chair v2
-@inputs [Gun Pod Camera]:wirelink
+@inputs [Pod Camera]:wirelink
 @persist [Self Events]:table
 
 if( first() ) {
@@ -18,7 +18,8 @@ if( first() ) {
 
   function void handleActiveFall() {
     Self:update( "View", Off )
-    Self:update( "Lock", Off )
+
+    dsSend( "Activate", "Weapons", Off )
   }
 
   function void handleToggleView() {
@@ -27,43 +28,50 @@ if( first() ) {
     local View = Self:current( "View" )
 
     Cam["Activated", number] = View
-    Gun["Active",    number] = View
-    Gun["Open",      numver] = View
+
+    dsSend( "Activate", "Weapons", View )
   }
 
   function void handleCriticalUpdate() {
     Self:update( "Lock", Self["Target", entity]:isValid() )
-
   }
 
-  function void handlLockTarget() {
-    # TODO: simulate lock time
-    Gun["Entity", entity] = Self["Target", entity]
-    # TODO: handle launch type
-    if( Gun:hasInput( "Lock" ) ) { Gun["Lock", number] = Lock }
+  function void handleStopFire() {
+    dsSend( "Fire", "Weapons", Off )
   }
 
   function void handleView() {
-    local EGun = Self["EGun", entity]
-    local Position = EGun:pos() + vec( 0, 0, 120 )
+    local ECam = Self["ECam", entity]
+    local Position = ECam:pos() + vec( 0, 0, 120 )
     local Angle = ang( -Pod["Elevation", number], Pod["Bearing", number], 0 )
     local Direction = vec( 1, 0, 0 ):rotate( Angle )
     local Ranger = rangerOffset( 1024, Position, Direction )
 
-    Self["Ranger", ranger]
+    Self["Ranger", ranger] = Ranger
+
     Cam["Angle", angle] = Angle
     Cam["Position", vector] = Position
+
+    dsSend( "Target.Position", "Weapons", Ranger:pos() )
+  }
+
+  function void handleAquireTarget() {
+    local Target = Self["Ranger", ranger]:entity()
+
+    Self["Target", entity] = Target
+
+    dsSend( "Target", "Weapons", Target )
   }
 
   function table new() {
     local Self = table()
     local Chip = entity()
     local Base = Pod["Entity", entity]
-    local EGun = Gun["Entity", entity]
+    local ECam = Cam["Entity", entity]
 
     Self["Chip", entity] = Chip
     Self["Base", entity] = Base
-    Self["EGun", entity] = Gun
+    Self["ECam", entity] = ECam
 
     Cam["Parent", entity] = Base
   }
@@ -85,15 +93,19 @@ if( first() ) {
 
     Events:on( "Active", "rise", "handleActiveRise" )
     Events:on( "Active", "fall", "handleActiveFall" )
-    Events:on( "Atl",    "rise", "handleToggleView" )
-    Events:on( "Mouse2", "rise", "handleAquireTarget" )
+    Events:on( "Alt",    "rise", "handleToggleView" )
     Events:on( "Active", "high", "handleCriticalUpdate" )
-    Events:on( "Lock",   "rise", "handlLockTarget" )
+    Events:on( "Lock",   "fall", "handleTargetLost" )
     Events:on( "View",   "high", "handleView" )
+    Events:on( "Mouse2", "rise", "handleAquireTarget" )
     Events:on( "Mouse1")
   }
 
   setup()
+}
+
+if( dsClk( "Target.Aquired" ) ) {
+  printColor( Cyan, dsGetSender():getName() + " target aquired" )
 }
 
 if( !Self:current( "Active" ) ) { exit() }
