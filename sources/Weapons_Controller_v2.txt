@@ -1,6 +1,11 @@
 @name Weapons Controller v2
 @inputs Gun:wirelink
 
+#[
+    Author: TJ Peden
+    License: MIT
+]#
+
 if( first() ) {
     dsJoinGroup( "Weapons" )
 
@@ -9,36 +14,40 @@ if( first() ) {
     printColor( Red, "Name me, please" )
 }
 
+if( !->Gun ) { exit() }
+
 if( dsClk( "Activate" ) ) {
     local Active = dsGetNumber()
 
-    Gun["Active", number] = Active
     Gun["Open",   number] = Active
+    Gun["Active", number] = Active
+}
+
+if( dsClk( "Target" ) ) {
+    local Target = dsGetEntity()
+    if( Gun:hasInput( "Target" ) ) { Gun["Target", entity] = Target }
+    if( Gun:hasInput( "Entity" ) ) { Gun["Entity", entity] = Target }
+
+    if( Gun:hasInput( "Lock" ) ) {
+        Gun["Lock", number] = Target:isValid()
+    }
+
+    dsSendDirect( "Target.Aquired", dsGetSender(), Target:isValid() )
 }
 
 if( Gun:hasInput( "Fire" ) ) {
-    if( dsClk( "Target" ) ) {
-        local Target = dsGetEntity()
-        Gun["Target", entity] = Target
-
-        if( Gun:hasInput( "Lock" ) ) {
-            Gun["Lock", number] = Target:isValid()
-        }
-
-        dsSendDirect( "Target.Aquired", dsGetSender(), Target:isValid() )
-    }
-
     if( dsClk( "Fire" ) ) {
         Gun["Fire", number] = dsGetNumber()
     }
 }
 
 if( Gun:hasInput( "Launch" ) ) {
+
     if( dsClk( "Target.Position" ) ) {
         Gun["Vector", vector] = dsGetVector()
     }
 
     if( dsClk( "Fire" ) ) {
-        Gun["Lunch", number] = dsGetNumber()
+        Gun["Launch", number] = dsGetNumber()
     }
 }

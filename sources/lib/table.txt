@@ -22,8 +22,9 @@ function void table:update(Key:string, Value:vector) {
     This[Key, vector] = Value
 }
 
-function void table:toggle(Key:string) {
-    This:update(Key, !This[Key, number])
+function number table:toggle(Key:string) {
+    local Value = !This[Key, number]
+    This:update(Key, Value)
 }
 
 function number table:current(Key:string) {
